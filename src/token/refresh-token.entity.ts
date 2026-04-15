@@ -8,7 +8,7 @@ export class RefreshToken extends BaseEntity{
 
     @Index({ unique: true })
     @Column({ length: 255 })
-    tokenHash: string;
+    token: string;
 
     @Column({ type: 'timestamptz' })
     expiresAt: Date;
