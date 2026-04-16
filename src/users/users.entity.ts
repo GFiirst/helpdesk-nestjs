@@ -1,5 +1,5 @@
 import { BaseEntity } from "src/database/base-entity";
-import { Role } from "src/roles/roles.entity";
+import { Roles } from "src/roles/roles.entity";
 import { RefreshToken } from "src/token/refresh-token.entity";
 import { Column, Entity, Index, ManyToMany, OneToMany } from "typeorm";
 
@@ -21,6 +21,6 @@ export class User extends BaseEntity {
     @OneToMany(() => RefreshToken, (token) => token.user)
     refreshTokens: RefreshToken[];
 
-    @ManyToMany(() => Role, (role) => role.user)
-    roles: Role[];
+    @ManyToMany(() => Roles, (roles) => roles.user)
+    roles: Roles[];
 }
