@@ -10,4 +10,19 @@ export class UsersService {
         @InjectRepository(User)
         private userRepository: Repository<User>,
     ){}
+
+    async findByIdWithRolesAndPermissions(id: string) {
+        const user = await this.userRepository.findOne({
+            where: {
+                id: id
+            },
+            relations: {
+                roles: {
+                    permissions: true
+                }
+            }
+        })
+
+        return user
+    }
 }
