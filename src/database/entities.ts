@@ -9,5 +9,4 @@ export const entities = [
     Roles,
     Permissions,
     RefreshToken,
-
 ]
