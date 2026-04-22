@@ -11,6 +11,13 @@ export class CaslAbilityFactory {
         const { can, cannot, build } = new AbilityBuilder<
         MongoAbility<[Action, Subjects], MongoQuery>
         >(createMongoAbility);
-    }
 
+        for(const role of user.roles) {
+            for(const permission of role.permissions) {
+                can(permission.action, permission.subject);
+            }
+        }
+
+        return build();
+    }
 }
