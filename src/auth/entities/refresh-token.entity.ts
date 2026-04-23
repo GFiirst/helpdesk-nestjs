@@ -1,7 +1,7 @@
 import { Column, Entity, Index, ManyToOne } from "typeorm";
-import { TokenStatus } from "./enum/token-status";
 import { BaseEntity } from "src/database/base-entity";
 import { User } from "src/users/users.entity";
+import { TokenStatus } from "../enum/token-status";
 
 @Entity()
 export class RefreshToken extends BaseEntity{

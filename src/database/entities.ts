@@ -1,5 +1,5 @@
 import { Roles } from "src/roles/roles.entity";
-import { RefreshToken } from "src/token/refresh-token.entity";
+import { RefreshToken } from "src/auth/entities/refresh-token.entity";
 import { User } from "src/users/users.entity";
 import { BaseEntity } from "typeorm";
 

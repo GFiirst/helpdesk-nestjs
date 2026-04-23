@@ -1,6 +1,6 @@
 import { BaseEntity } from "src/database/base-entity";
 import { Roles } from "src/roles/roles.entity";
-import { RefreshToken } from "src/token/refresh-token.entity";
+import { RefreshToken } from "src/auth/entities/refresh-token.entity";
 import { Column, Entity, Index, ManyToMany, OneToMany } from "typeorm";
 
 @Entity()

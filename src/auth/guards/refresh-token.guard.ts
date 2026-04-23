@@ -1,10 +1,10 @@
 import { InjectRepository } from "@nestjs/typeorm";
-import { RefreshToken } from "./refresh-token.entity";
+import { RefreshToken } from "../entities/refresh-token.entity";
 import { JwtService } from "@nestjs/jwt";
 import { UsersService } from "src/users/users.service";
 import { Repository } from "typeorm";
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
-import { TokenStatus } from "./enum/token-status";
+import { TokenStatus } from "../enum/token-status";
 
 @Injectable()
 export class RefreshTokenGuard implements CanActivate {
