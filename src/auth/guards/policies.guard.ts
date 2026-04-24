@@ -1,10 +1,10 @@
 import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { CHECK_POLICIES_KEY } from "./decorators/check-policies.decorator";
-import { PolicyHandler, AppAbility } from "./decorators/check-policies.decorator";
-import { CaslAbilityFactory } from "./casl-ability.factory";
+import { CHECK_POLICIES_KEY } from "../casl/decorators/check-policies.decorator";
+import { PolicyHandler, AppAbility } from "../casl/decorators/check-policies.decorator";
+import { CaslAbilityFactory } from "../casl/casl-ability.factory";
 import { IS_PUBLIC_KEY } from "src/auth/decorators/is-public.decorator";
-import { Action } from "./enums/casl-action";
+import { Action } from "../casl/enums/casl-action";
 
 
 @Injectable()
