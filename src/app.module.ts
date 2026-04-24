@@ -1,5 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthGuard } from './auth/guards/auth.guard';
+import { APP_GUARD } from '@nestjs/core';
+import { PoliciesGuard } from './auth/guards/policies.guard';
+import { AuthModule } from './auth/auth.module';
+import { CaslModule } from './auth/casl/casl.module';
+import { JwtModule } from '@nestjs/jwt';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -11,9 +18,25 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       synchronize: false,
+    }),
+    AuthModule,
+    CaslModule,
+    UsersModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      global: true
     })
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PoliciesGuard
+    },
+  ],
 })
 export class AppModule {}
