@@ -1,7 +1,7 @@
 import { MongoAbility, MongoQuery } from "@casl/ability";
 import { SetMetadata } from "@nestjs/common";
-import { Action } from "src/casl/enums/casl-action";
-import { Subjects } from "src/casl/enums/casl-subject";
+import { Action } from "src/auth/casl/enums/casl-action";
+import { Subjects } from "src/auth/casl/enums/casl-subject";
 
 export const CHECK_POLICIES_KEY = 'check_policy';
 

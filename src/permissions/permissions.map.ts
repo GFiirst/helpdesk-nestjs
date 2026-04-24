@@ -1,4 +1,4 @@
-import { Action } from "src/casl/enums/casl-action";
+import { Action } from "src/auth/casl/enums/casl-action";
 import { UserRoles } from "src/roles/enums/user-roles";
 
 export const PERMISSIONS = {

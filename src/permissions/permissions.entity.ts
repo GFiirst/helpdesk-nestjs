@@ -1,6 +1,6 @@
 import { BaseEntity, Column, Entity, ManyToMany } from "typeorm";
-import { Action } from "src/casl/enums/casl-action";
-import { Subjects } from "src/casl/enums/casl-subject";
+import { Action } from "src/auth/casl/enums/casl-action";
+import { Subjects } from "src/auth/casl/enums/casl-subject";
 import { Roles } from "src/roles/roles.entity";
 
 @Entity()
