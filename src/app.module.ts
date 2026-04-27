@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { CaslModule } from './auth/casl/casl.module';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from './users/users.module';
+import { AsyncLocalStorage } from 'async_hooks';
 
 @Module({
   imports: [
@@ -36,6 +37,10 @@ import { UsersModule } from './users/users.module';
     {
       provide: APP_GUARD,
       useClass: PoliciesGuard
+    },
+    {
+      provide: AsyncLocalStorage,
+      useValue: new AsyncLocalStorage()
     },
   ],
 })
