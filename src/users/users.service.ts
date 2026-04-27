@@ -33,7 +33,6 @@ export class UsersService {
         const userPass = createUser.password;
         const criptPass = await bcrypt.hash(userPass, +process.env.BCRYPT_SALT!);
 
-        newUser.name = createUser.name;
         newUser.email = createUser.email;
         newUser.password = criptPass;
         

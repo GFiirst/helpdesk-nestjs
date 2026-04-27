@@ -5,9 +5,6 @@ import { Column, Entity, Index, ManyToMany, OneToMany } from "typeorm";
 
 @Entity()
 export class User extends BaseEntity {
-    @Column({ length: 255 })
-    name: string;
-
     @Index('users_email_unique_active', ['email'], {
         unique: true,
         where: '"deletedAt" IS NULL',
