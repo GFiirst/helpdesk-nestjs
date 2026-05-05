@@ -8,6 +8,7 @@ import { CaslModule } from './auth/casl/casl.module';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from './users/users.module';
 import { AsyncLocalStorage } from 'async_hooks';
+import 'dotenv/config';
 
 @Module({
   imports: [

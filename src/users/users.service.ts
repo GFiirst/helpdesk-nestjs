@@ -52,4 +52,19 @@ export class UsersService {
             message: "User created successfully"
         }
     }
+
+    async findByIdWithRolesAndPermissions(id: string) {
+    const user = await this.userRepository.findOne({
+        where: {
+            id: id
+        },
+        relations: {
+            roles: {
+                permissions: true
+            }
+        }
+    })
+
+        return user
+    }
 }
