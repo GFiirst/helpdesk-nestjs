@@ -1,7 +1,6 @@
 import { BaseEntity } from "src/database/base-entity";
-import { Roles } from "src/roles/roles.entity";
 import { RefreshToken } from "src/auth/entities/refresh-token.entity";
-import { Column, Entity, Index, ManyToMany, OneToMany, OneToOne } from "typeorm";
+import { Column, Entity, Index,  OneToMany, OneToOne } from "typeorm";
 import { User } from "src/users/entity/users.entity";
 
 @Entity()

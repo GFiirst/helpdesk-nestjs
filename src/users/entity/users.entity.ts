@@ -2,6 +2,7 @@ import { Credential } from "src/auth/entities/credential.entity";
 import { BaseEntity } from "src/database/base-entity";
 import { Roles } from "src/roles/roles.entity";
 import { Entity, JoinColumn, JoinTable, ManyToMany, OneToOne } from "typeorm";
+import { Profile } from "./profile.entity";
 
 @Entity()
 export class User extends BaseEntity {
@@ -12,4 +13,7 @@ export class User extends BaseEntity {
     @ManyToMany(() => Roles, (role) => role.users)
     @JoinTable()
     roles: Roles[];
+
+    @OneToOne(() => Profile, profile => profile.user)
+    profile: Profile;
 }
