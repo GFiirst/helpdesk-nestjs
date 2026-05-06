@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { User } from "./users.entity";
+import { Credential } from "../auth/entities/credential.entity";
 import { Repository } from "typeorm";
 import { CreateUserDto } from "./dto/create-user.dto";
 import * as bcrypt from "bcrypt";
@@ -11,16 +11,16 @@ import { UserRoles } from "src/roles/enums/user-roles";
 export class UsersService {
     
     constructor(
-        @InjectRepository(User)
-        private userRepository: Repository<User>,
+        @InjectRepository(Credential)
+        private credentialRepository: Repository<Credential>,
         @InjectRepository(Roles)
         private rolesRepository: Repository<Roles>,
     ){}
 
     async createUser(createUser: CreateUserDto) {
-        const newUser = new User();
+        const newUser = new Credential();
 
-        const existingEmail = await this.userRepository.findOne({ 
+        const existingEmail = await this.credentialRepository.findOne({ 
             where: { 
                 email: createUser.email 
             } 
@@ -47,14 +47,14 @@ export class UsersService {
         }
         newUser.roles = [userRole];
 
-        await this.userRepository.save(newUser);
+        await this.credentialRepository.save(newUser);
         return{
             message: "User created successfully"
         }
     }
 
     async findByIdWithRolesAndPermissions(id: string) {
-    const user = await this.userRepository.findOne({
+    const user = await this.credentialRepository.findOne({
         where: {
             id: id
         },

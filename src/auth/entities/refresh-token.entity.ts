@@ -1,7 +1,7 @@
 import { Column, Entity, Index, ManyToOne } from "typeorm";
 import { BaseEntity } from "src/database/base-entity";
-import { User } from "src/users/users.entity";
 import { TokenStatus } from "../enum/token-status";
+import { Credential } from "./credential.entity";
 
 @Entity()
 export class RefreshToken extends BaseEntity{
@@ -29,8 +29,8 @@ export class RefreshToken extends BaseEntity{
     @Column({ nullable: true })
     ip: string;
 
-    @ManyToOne(() => User, (user) => user.refreshTokens, {
+    @ManyToOne(() => Credential, (credential) => credential.refreshTokens, {
         onDelete: 'CASCADE',
     })
-    user: User;
+    credential: Credential;
 }

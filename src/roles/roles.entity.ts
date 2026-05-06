@@ -1,6 +1,5 @@
 import { Column, Entity, JoinTable, ManyToMany } from "typeorm";
 import { UserRoles } from "./enums/user-roles";
-import { User } from "src/users/users.entity";
 import { Permissions } from "src/permissions/permissions.entity";
 import { BaseEntity } from "src/database/base-entity";
 
@@ -13,9 +12,9 @@ export class Roles extends BaseEntity{
     })
     role: UserRoles;
 
-    @ManyToMany(()=> User, (user) => user.roles)
-    @JoinTable()
-    user: User[]
+    // @ManyToMany(()=> User, (user) => user.roles)
+    // @JoinTable()
+    // user: User[]
 
     @ManyToMany(() => Permissions, (permission) => permission.roles)
     @JoinTable()
