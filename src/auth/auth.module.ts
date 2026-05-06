@@ -6,7 +6,7 @@ import { AuthService } from "./auth.service";
 import { APP_GUARD } from "@nestjs/core";
 import { AuthGuard } from "./guards/auth.guard";
 import { Roles } from "src/roles/roles.entity";
-import { User } from "src/users/users.entity";
+import { User } from "src/users/entity/users.entity";
 
 @Module({
     imports: [TypeOrmModule.forFeature([User, Credential, Roles])],

@@ -6,7 +6,7 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import * as bcrypt from "bcrypt";
 import { Roles } from "src/roles/roles.entity";
 import { UserRoles } from "src/roles/enums/user-roles";
-import { User } from "./users.entity";
+import { User } from "./entity/users.entity";
 
 @Injectable()
 export class UsersService {

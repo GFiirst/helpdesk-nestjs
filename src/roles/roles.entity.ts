@@ -2,6 +2,7 @@ import { Column, Entity, JoinTable, ManyToMany } from "typeorm";
 import { UserRoles } from "./enums/user-roles";
 import { Permissions } from "src/permissions/permissions.entity";
 import { BaseEntity } from "src/database/base-entity";
+import { User } from "src/users/entity/users.entity";
 
 @Entity()
 export class Roles extends BaseEntity{
@@ -12,9 +13,8 @@ export class Roles extends BaseEntity{
     })
     role: UserRoles;
 
-    // @ManyToMany(()=> User, (user) => user.roles)
-    // @JoinTable()
-    // user: User[]
+    @ManyToMany(() => User, (user) => user.roles)
+    users: User[];
 
     @ManyToMany(() => Permissions, (permission) => permission.roles)
     @JoinTable()
