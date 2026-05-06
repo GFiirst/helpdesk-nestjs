@@ -1,7 +1,8 @@
-import { BaseEntity, Column, Entity, ManyToMany } from "typeorm";
+import { Column, Entity, ManyToMany } from "typeorm";
 import { Action } from "src/auth/casl/enums/casl-action";
 import { Subjects } from "src/auth/casl/enums/casl-subject";
 import { Roles } from "src/roles/roles.entity";
+import { BaseEntity } from "src/database/base-entity";
 
 @Entity()
 export class Permissions extends BaseEntity{
