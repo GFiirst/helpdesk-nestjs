@@ -1,7 +1,8 @@
 import { BaseEntity } from "src/database/base-entity";
 import { Roles } from "src/roles/roles.entity";
 import { RefreshToken } from "src/auth/entities/refresh-token.entity";
-import { Column, Entity, Index, ManyToMany, OneToMany } from "typeorm";
+import { Column, Entity, Index, ManyToMany, OneToMany, OneToOne } from "typeorm";
+import { User } from "src/users/users.entity";
 
 @Entity()
 export class Credential extends BaseEntity {
@@ -14,6 +15,9 @@ export class Credential extends BaseEntity {
 
     @Column({ length: 255 })
     password: string;
+
+    @OneToOne(() => User, user => user.credential)
+    user: User;
 
     @OneToMany(() => RefreshToken, (token) => token.credential)
     refreshTokens: RefreshToken[];

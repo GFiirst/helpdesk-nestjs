@@ -6,9 +6,10 @@ import { AuthService } from "./auth.service";
 import { APP_GUARD } from "@nestjs/core";
 import { AuthGuard } from "./guards/auth.guard";
 import { Roles } from "src/roles/roles.entity";
+import { User } from "src/users/users.entity";
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Credential, Roles])],
+    imports: [TypeOrmModule.forFeature([User, Credential, Roles])],
     controllers: [AuthController],
     providers: [
         AuthService,
