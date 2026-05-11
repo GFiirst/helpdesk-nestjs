@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Credential } from "../auth/entities/credential.entity";
 import { Repository } from "typeorm";
@@ -20,41 +20,42 @@ export class UsersService {
         private rolesRepository: Repository<Roles>,
     ){}
 
-    // async createUser(createUser: CreateUserDto) {
-    //     const newUser = new Credential();
+    async createUser(createUser: CreateUserDto) {
+        const existingEmail = await this.credentialRepository.findOne({
+            where: { email: createUser.email },
+        });
 
-    //     const existingEmail = await this.credentialRepository.findOne({ 
-    //         where: { 
-    //             email: createUser.email 
-    //         } 
-    //     });
+        if (existingEmail) {
+            throw new BadRequestException("Email already exists");
+        }
 
-    //     if (existingEmail) {
-    //         throw new BadRequestException("Email already exists");
-    //     }
+        const hashedPassword = await bcrypt.hash(
+            createUser.password,
+            Number(process.env.BCRYPT_SALT),
+        );
 
-    //     const userPass = createUser.password;
-    //     const criptPass = await bcrypt.hash(userPass, +process.env.BCRYPT_SALT!);
+        const credential = this.credentialRepository.create({
+            email: createUser.email,
+            password: hashedPassword,
+        });
 
-    //     newUser.email = createUser.email;
-    //     newUser.password = criptPass;
-        
-    //     const userRole = await this.rolesRepository.findOne({
-    //         where:{
-    //             role: UserRoles.USER
-    //         },
-    //     })
+        const role = await this.rolesRepository.findOne({
+            where: { role: UserRoles.USER },
+        });
 
-    //     if(!userRole){
-    //         throw new BadRequestException("User role not found");
-    //     }
-    //     newUser.roles = [userRole];
+        if (!role) {
+            throw new NotFoundException("Default role not found");
+        }
 
-    //     await this.credentialRepository.save(newUser);
-    //     return{
-    //         message: "User created successfully"
-    //     }
-    // }
+        const user = this.userRepository.create({
+            credential,
+            roles: [role],
+        });
+
+        await this.userRepository.save(user);
+
+        return { message: "User created successfully" };
+    }
 
     async findByIdWithRolesAndPermissions(id: string) {
     const user = await this.userRepository.findOne({
