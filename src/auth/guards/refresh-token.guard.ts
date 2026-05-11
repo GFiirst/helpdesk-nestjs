@@ -28,7 +28,7 @@ export class RefreshTokenGuard implements CanActivate {
 
             const storedToken = await this.refreshTokenRepo.findOne({
                 where: { token },
-                relations: ['user'],
+                relations: ['credential'],
             });
 
             if (!storedToken) {
@@ -43,7 +43,7 @@ export class RefreshTokenGuard implements CanActivate {
                 throw new UnauthorizedException('expired Refresh token');
             }
 
-            req['user'] = storedToken.user;
+            req['credential'] = storedToken.credential;
             req['refreshToken'] = storedToken;
 
             return true;
