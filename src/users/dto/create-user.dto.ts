@@ -3,6 +3,12 @@ import { IsEmail, IsNotEmpty, IsString, MaxLength } from "class-validator";
 import { UserRoles } from "src/roles/enums/user-roles";
 
 export class CreateUserDto {
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(200, { message: "The name cannot exceed 200 characters" })
+    @ApiProperty()
+    name: string;
+
     @IsEmail()
     @MaxLength(200, { message: "The email cannot exceed 200 characters" })
     @ApiProperty()
