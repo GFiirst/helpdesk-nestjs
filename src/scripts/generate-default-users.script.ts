@@ -1,27 +1,27 @@
 import { AppDataSource } from "src/database/data-source";
 import { UserRoles } from "src/roles/enums/user-roles";
 import { Roles } from "src/roles/roles.entity";
-import { User } from "src/auth/entities/credential.entity";
+import { Credential } from "src/auth/entities/credential.entity";
 import * as bcrypt from "bcrypt";
 
 async function generateDefaultUsers() {
     await AppDataSource.initialize();
 
-    const userRepository = AppDataSource.getRepository(User);
+    const credentialRepository = AppDataSource.getRepository(Credential);
     const roleRepository = AppDataSource.getRepository(Roles);
 
-    const existsAdminUser = await userRepository.findOne({
+    const existsAdminUser = await credentialRepository.findOne({
         where: {
             email: process.env.ADMIN_EMAIL!
         }
     })
 
     if(!existsAdminUser) {
-        await adminUser(roleRepository, userRepository)
+        await adminUser(roleRepository, credentialRepository)
     }
 }
 
-async function adminUser(roleRepository: any, userRepository: any) {
+async function adminUser(roleRepository: any, credentialRepository: any) {
     const adminRole = await roleRepository.findOne({
         where: {
             role: UserRoles.ADMIN
@@ -32,7 +32,7 @@ async function adminUser(roleRepository: any, userRepository: any) {
         throw new Error("Admin role not found. Please run the generate-default-roles script first.");
     }
 
-    const newAdminUser = new User();
+    const newAdminUser = new Credential();
 
     const criptPass = await bcrypt.hash(process.env.ADMIN_PASSWORD!, +process.env.BCRYPT_SALT!);
 
@@ -40,7 +40,7 @@ async function adminUser(roleRepository: any, userRepository: any) {
     newAdminUser.password = criptPass;
     newAdminUser.roles = [adminRole];
 
-    await userRepository.save(newAdminUser);
+    await credentialRepository.save(newAdminUser);
 }
 
 generateDefaultUsers()
