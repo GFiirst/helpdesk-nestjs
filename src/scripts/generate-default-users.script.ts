@@ -2,6 +2,8 @@ import { AppDataSource } from "src/database/data-source";
 import { UserRoles } from "src/roles/enums/user-roles";
 import { Roles } from "src/roles/roles.entity";
 import { Credential } from "src/auth/entities/credential.entity";
+import { User } from "src/users/entity/users.entity";
+import { Profile } from "src/users/entity/profile.entity";
 import * as bcrypt from "bcrypt";
 
 async function generateDefaultUsers() {
@@ -9,6 +11,8 @@ async function generateDefaultUsers() {
 
     const credentialRepository = AppDataSource.getRepository(Credential);
     const roleRepository = AppDataSource.getRepository(Roles);
+    const userRepository = AppDataSource.getRepository(User);
+    const profileRepository = AppDataSource.getRepository(Profile);
 
     const existsAdminUser = await credentialRepository.findOne({
         where: {
@@ -17,11 +21,11 @@ async function generateDefaultUsers() {
     })
 
     if(!existsAdminUser) {
-        await adminUser(roleRepository, credentialRepository)
+        await adminUser(roleRepository, credentialRepository, userRepository, profileRepository)
     }
 }
 
-async function adminUser(roleRepository: any, credentialRepository: any) {
+async function adminUser(roleRepository: any, credentialRepository: any, userRepository: any, profileRepository: any) {
     const adminRole = await roleRepository.findOne({
         where: {
             role: UserRoles.ADMIN
@@ -32,15 +36,21 @@ async function adminUser(roleRepository: any, credentialRepository: any) {
         throw new Error("Admin role not found. Please run the generate-default-roles script first.");
     }
 
-    const newAdminUser = new Credential();
+    const credential = new Credential();
+    credential.email = process.env.ADMIN_EMAIL!;
+    credential.password = await bcrypt.hash(process.env.ADMIN_PASSWORD!, +process.env.BCRYPT_SALT!);
 
-    const criptPass = await bcrypt.hash(process.env.ADMIN_PASSWORD!, +process.env.BCRYPT_SALT!);
+    await credentialRepository.save(credential);
 
-    newAdminUser.email = process.env.ADMIN_EMAIL!;
-    newAdminUser.password = criptPass;
-    newAdminUser.roles = [adminRole];
+    const user = new User();
+    user.credential = credential;
+    user.roles = [adminRole];
+    await userRepository.save(user);
 
-    await credentialRepository.save(newAdminUser);
+    const profile = new Profile();
+    profile.name = process.env.ADMIN_NAME ?? "Admin";
+    profile.user = user;
+    await profileRepository.save(profile);
 }
 
 generateDefaultUsers()
