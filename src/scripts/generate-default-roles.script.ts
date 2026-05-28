@@ -1,4 +1,3 @@
-import { generate } from "rxjs";
 import { AppDataSource } from "src/database/data-source";
 import { UserRoles } from "src/roles/enums/user-roles";
 import { Roles } from "src/roles/roles.entity";
@@ -22,9 +21,9 @@ async function generateDefaultRoles() {
             }
         });
 
-        if (!exRole) {
+        if (exRole) {
             rolesAlreadyCreated.push(role);
-            continue
+            continue;
         }
 
         await roleRepository.save(newRole);
