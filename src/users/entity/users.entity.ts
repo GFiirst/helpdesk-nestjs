@@ -15,5 +15,6 @@ export class User extends BaseEntity {
     roles: Roles[];
 
     @OneToOne(() => Profile, profile => profile.user)
+    @JoinColumn()
     profile: Profile;
 }
