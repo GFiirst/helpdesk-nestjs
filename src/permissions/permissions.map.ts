@@ -4,6 +4,6 @@ import { UserRoles } from "src/roles/enums/user-roles";
 export const PERMISSIONS = {
     manage: [{
         permissions: `manage.${Action.Manage}`,
-        roles: UserRoles.ADMIN
+        roles: [UserRoles.ADMIN]
     }],
 }
