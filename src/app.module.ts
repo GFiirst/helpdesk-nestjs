@@ -9,6 +9,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from './users/users.module';
 import { AsyncLocalStorage } from 'async_hooks';
 import 'dotenv/config';
+import { entities } from './database/entities';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import 'dotenv/config';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
+      entities: entities,
       synchronize: false,
     }),
     AuthModule,
