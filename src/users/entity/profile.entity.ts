@@ -18,6 +18,10 @@ export class Profile extends BaseEntity{
     @Column({ nullable: true })
     branch: string;
 
+    //new table soon
+    @Column({ nullable: true })
+    remoteAccess: string;
+
     @Column({ default: true })
     isAvailable: boolean;
 
