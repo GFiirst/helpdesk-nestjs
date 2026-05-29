@@ -8,10 +8,18 @@ export class Profile extends BaseEntity{
     name: string;
 
     @Column({ nullable: true })
-    anydeskId: string;
+    phone: string;
 
-    // @Column({ nullable: true })
-    // department: string;
+    //new table soon
+    @Column({ nullable: true })
+    department: string;
+
+    //new table soon
+    @Column({ nullable: true })
+    branch: string;
+
+    @Column({ default: true })
+    isAvailable: boolean;
 
     @OneToOne(() => User, user => user.profile)
     user: User;
