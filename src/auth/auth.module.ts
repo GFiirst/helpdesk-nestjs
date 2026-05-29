@@ -7,12 +7,13 @@ import { APP_GUARD } from "@nestjs/core";
 import { AuthGuard } from "./guards/auth.guard";
 import { Roles } from "src/roles/roles.entity";
 import { User } from "src/users/entity/users.entity";
+import { UsersService } from "src/users/users.service";
 
 @Module({
     imports: [TypeOrmModule.forFeature([User, Credential, Roles])],
     controllers: [AuthController],
     providers: [
-        AuthService,
+        AuthService, UsersService,
         {
             provide: APP_GUARD,
             useClass: AuthGuard,
