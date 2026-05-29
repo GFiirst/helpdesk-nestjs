@@ -58,13 +58,6 @@ export class UsersService {
 
             await manager.save(user);
 
-            const profile = manager.create(Profile, {
-                name: dto.name,
-                user,
-            });
-
-            await manager.save(profile);
-
             return { message: "User created successfully" };
         });
     }
