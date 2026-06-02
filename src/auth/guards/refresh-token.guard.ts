@@ -4,6 +4,7 @@ import { JwtService } from "@nestjs/jwt";
 import { Repository } from "typeorm";
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
 import { TokenStatus } from "../enum/token-status";
+import * as bcrypt from "bcrypt";
 
 @Injectable()
 export class RefreshTokenGuard implements CanActivate {
@@ -27,7 +28,9 @@ export class RefreshTokenGuard implements CanActivate {
             });
 
             const storedToken = await this.refreshTokenRepo.findOne({
-                where: { token },
+                where: {
+                    id: payload.tokenId,
+                },
                 relations: ['credential'],
             });
 
@@ -41,6 +44,15 @@ export class RefreshTokenGuard implements CanActivate {
 
             if (new Date() > storedToken.expiresAt) {
                 throw new UnauthorizedException('expired Refresh token');
+            }
+
+            const isMatch = await bcrypt.compare(
+                token,
+                storedToken.token,
+            );
+
+            if (!isMatch) {
+                throw new UnauthorizedException('Invalid refresh token');
             }
 
             req['credential'] = storedToken.credential;
