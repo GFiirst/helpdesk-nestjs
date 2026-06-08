@@ -1,6 +1,6 @@
 import { Column, Entity, Index, ManyToOne } from "typeorm";
 import { BaseEntity } from "src/database/base-entity";
-import { TokenStatus } from "../enum/token-status";
+import { TokenStatus } from "../enums/token-status";
 import { Credential } from "./credential.entity";
 
 @Entity()

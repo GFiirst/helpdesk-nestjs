@@ -3,7 +3,7 @@ import { RefreshToken } from "../entities/refresh-token.entity";
 import { JwtService } from "@nestjs/jwt";
 import { Repository } from "typeorm";
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
-import { TokenStatus } from "../enum/token-status";
+import { TokenStatus } from "../enums/token-status";
 import * as bcrypt from "bcrypt";
 
 @Injectable()
