@@ -24,7 +24,33 @@ export class AuthService {
         loginCredential: LoginCredentialsDto,
         req: Request,
         res: Response,
-    ){
+    ){  
+
+        const existingRefreshToken = req.cookies?.refresh_token;
+
+        if (existingRefreshToken) {
+            try {
+                const payload = await this.jwtService.verifyAsync(
+                    existingRefreshToken,
+                    {
+                        secret: process.env.JWT_REFRESH_SECRET,
+                    },
+                );
+
+                const storedToken = await this.refreshTokenRepository.findOne({
+                    where: {
+                        id: payload.tokenId,
+                    },
+                });
+
+                if (storedToken) {
+                    storedToken.status = TokenStatus.REVOKED;
+
+                    await this.refreshTokenRepository.save(storedToken);
+                }
+            } catch (err) {}
+        }
+
         const existingCredential = await this.credentialRepository.findOne({
             where: {email: loginCredential.email},
             relations: ['user'],
