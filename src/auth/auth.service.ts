@@ -96,6 +96,33 @@ export class AuthService {
         };
     }
 
+    async refreshToken( 
+        req: Request,
+        res: Response
+    ){
+        const credential = req['credential'] as Credential;
+
+        const payload = {
+            email: credential.email,
+            sub: credential.id,
+        };
+
+        const accessToken = await this.jwtService.signAsync(payload,{
+            secret: process.env.JWT_SECRET,
+            expiresIn: '15m'
+        });
+
+        res.cookie('access_token', accessToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'strict',
+        });
+
+        return {
+            success: true,
+        };
+    }
+
     private extractDevice(
         userAgent?: string,
     ): string {
