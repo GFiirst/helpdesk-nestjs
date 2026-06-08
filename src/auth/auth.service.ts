@@ -26,6 +26,7 @@ export class AuthService {
     ){
         const existingCredential = await this.credentialRepository.findOne({
             where: {email: loginCredential.email},
+            relations: ['user'],
         })
 
         if(!existingCredential){
@@ -38,7 +39,7 @@ export class AuthService {
             return {message: "Invalid email or password"};
         }
 
-        const payload = { email: existingCredential.email, sub: existingCredential.id };
+        const payload = { email: existingCredential.email, sub: existingCredential.user.id };
 
         const accessToken = await this.jwtService.signAsync(payload,{
             secret: process.env.JWT_SECRET,
@@ -67,7 +68,7 @@ export class AuthService {
 
         const refreshToken = await this.jwtService.signAsync(
             {
-                sub: existingCredential.id,
+                sub: existingCredential.user.id,
                 tokenId: refreshTokenEntity.id,
             },
             {
@@ -104,7 +105,7 @@ export class AuthService {
 
         const payload = {
             email: credential.email,
-            sub: credential.id,
+            sub: credential.user.id,
         };
 
         const accessToken = await this.jwtService.signAsync(payload,{

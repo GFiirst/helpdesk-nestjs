@@ -31,7 +31,7 @@ export class RefreshTokenGuard implements CanActivate {
                 where: {
                     id: payload.tokenId,
                 },
-                relations: ['credential'],
+                relations: ['credential', 'credential.user'],
             });
 
             if (!storedToken) {
