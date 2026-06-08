@@ -4,13 +4,13 @@ import { UserRoles } from "src/roles/enums/user-roles";
 
 export class CreateUserDto {
     @IsEmail()
-    @MaxLength(200, { message: "The email cannot exceed 200 characters" })
+    @MaxLength(255, { message: "The email cannot exceed 255 characters" })
     @ApiProperty()
     email: string;
 
     @IsString()
     @IsNotEmpty()
-    @MaxLength(200, { message: "The password cannot exceed 200 characters" })
+    @MaxLength(255, { message: "The password cannot exceed 255 characters" })
     @ApiProperty()
     password: string;
 
