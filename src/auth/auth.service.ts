@@ -47,6 +47,7 @@ export class AuthService {
 
         const refreshTokenEntity = new RefreshToken();
 
+        refreshTokenEntity.token = 'pending';
         refreshTokenEntity.userAgent = req.headers['user-agent'] || 'unknown';
         refreshTokenEntity.ip =
         (req.headers['x-forwarded-for'] as string)
