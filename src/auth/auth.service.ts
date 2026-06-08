@@ -49,6 +49,9 @@ export class AuthService {
                     await this.refreshTokenRepository.save(storedToken);
                 }
             } catch (err) {}
+
+            res.clearCookie('refresh_token');
+            res.clearCookie('access_token');
         }
 
         const existingCredential = await this.credentialRepository.findOne({
