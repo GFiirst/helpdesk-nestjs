@@ -7,6 +7,8 @@ import { CreateUserDto } from "src/users/dto/create-user.dto";
 import { LoginCredentialsDto } from "./dto/login-credentials.dto";
 import { Request, Response } from 'express';
 import { RefreshTokenGuard } from "./guards/refresh-token.guard";
+import { AppAbility, CheckPolicies } from "src/casl/decorators/check-policies.decorator";
+import { Action } from "src/casl/enums/casl-action";
 
 @Controller('auth')
 export class AuthController {
@@ -45,8 +47,18 @@ export class AuthController {
         return await this.authService.refreshToken( req, res)
     }
 
+    @Post('/logout')
+    @Public()
+    @UseGuards(RefreshTokenGuard)
+    async logout(
+        @Req() req: Request,
+        @Res({ passthrough: true }) res: Response,
+    ){
+        return await this.authService.logout( req, res)
+    }
 
     @Get('/auth-test')
+    @CheckPolicies((ability: AppAbility) => ability.can(Action.Manage, "manage"))
     async authTest(){
         return {message: "You are authenticated"};
     }

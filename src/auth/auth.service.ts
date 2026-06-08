@@ -7,6 +7,7 @@ import { LoginCredentialsDto } from "./dto/login-credentials.dto";
 import * as bcrypt from "bcrypt"
 import { RefreshToken } from "./entities/refresh-token.entity";
 import { Request, Response } from 'express';
+import { TokenStatus } from "./enums/token-status";
 
 @Injectable()
 export class AuthService {
@@ -114,6 +115,35 @@ export class AuthService {
         });
 
         res.cookie('access_token', accessToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'strict',
+        });
+
+        return {
+            success: true,
+        };
+    }
+
+    async logout(
+        req: Request,
+        res: Response
+    ){
+        const refreshToken = req['refreshToken'];
+
+        refreshToken.status = TokenStatus.REVOKED;
+
+        await this.refreshTokenRepository.save(
+            refreshToken
+        );
+
+        res.clearCookie('access_token', {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'strict',
+        });
+
+        res.clearCookie('refresh_token', {
             httpOnly: true,
             secure: true,
             sameSite: 'strict',
