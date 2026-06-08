@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Credential } from "src/auth/entities/credential.entity";
@@ -69,6 +69,26 @@ export class AuthService {
             return {message: "Invalid email or password"};
         }
 
+        const MAX_SESSIONS = 5;
+
+        const activeSessions = await this.refreshTokenRepository.find({
+            where: {
+                credential: {
+                    id: existingCredential.id,
+                },
+                status: TokenStatus.ACTIVE,
+            },
+            order: {
+                createdAt: 'ASC',
+            },
+        });
+
+        if (activeSessions.length >= MAX_SESSIONS) {
+            const oldestSession = activeSessions[0];
+            oldestSession.status = TokenStatus.REVOKED;
+            await this.refreshTokenRepository.save(oldestSession);
+        }
+
         const payload = { email: existingCredential.email, sub: existingCredential.user.id };
 
         const accessToken = await this.jwtService.signAsync(payload,{
@@ -80,17 +100,8 @@ export class AuthService {
 
         refreshTokenEntity.token = 'pending';
         refreshTokenEntity.userAgent = req.headers['user-agent'] || 'unknown';
-        refreshTokenEntity.ip =
-        (req.headers['x-forwarded-for'] as string)
-            ?.split(',')[0]
-            ?.trim()
-        || req.socket.remoteAddress
-        || 'unknown';
-
-        refreshTokenEntity.device = this.extractDevice(
-            req.headers['user-agent'],
-        );
-       
+        refreshTokenEntity.ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()|| req.socket.remoteAddress || 'unknown';
+        refreshTokenEntity.device = this.extractDevice(req.headers['user-agent']);
         refreshTokenEntity.expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
         refreshTokenEntity.credential = existingCredential;
 
