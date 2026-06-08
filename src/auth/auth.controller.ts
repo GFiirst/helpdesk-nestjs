@@ -49,7 +49,6 @@ export class AuthController {
 
     @Post('/logout')
     @Public()
-    @UseGuards(RefreshTokenGuard)
     async logout(
         @Req() req: Request,
         @Res({ passthrough: true }) res: Response,

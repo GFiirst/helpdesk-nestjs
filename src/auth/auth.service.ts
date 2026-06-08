@@ -169,13 +169,32 @@ export class AuthService {
         req: Request,
         res: Response
     ){
-        const refreshToken = req['refreshToken'];
+        const refreshToken = req.cookies?.refresh_token;
 
-        refreshToken.status = TokenStatus.REVOKED;
+        if (refreshToken) {
+            try {
+                const payload = await this.jwtService.verifyAsync(
+                    refreshToken,
+                    {
+                        secret: process.env.JWT_REFRESH_SECRET,
+                    },
+                );
 
-        await this.refreshTokenRepository.save(
-            refreshToken
-        );
+                const storedToken = await this.refreshTokenRepository.findOne({
+                        where: {
+                            id: payload.tokenId,
+                        },
+                    });
+
+                if (storedToken) {
+                    storedToken.status = TokenStatus.REVOKED;
+
+                    await this.refreshTokenRepository.save(
+                        storedToken,
+                    );
+                }
+            } catch {}
+        }
 
         res.clearCookie('access_token', {
             httpOnly: true,
