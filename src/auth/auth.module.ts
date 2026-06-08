@@ -8,9 +8,10 @@ import { AuthGuard } from "./guards/auth.guard";
 import { Roles } from "src/roles/roles.entity";
 import { User } from "src/users/entity/users.entity";
 import { UsersService } from "src/users/users.service";
+import { RefreshToken } from "./entities/refresh-token.entity";
 
 @Module({
-    imports: [TypeOrmModule.forFeature([User, Credential, Roles])],
+    imports: [TypeOrmModule.forFeature([User, Credential, Roles, RefreshToken])],
     controllers: [AuthController],
     providers: [
         AuthService, UsersService,
