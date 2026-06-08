@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthGuard } from './auth/guards/auth.guard';
 import { APP_GUARD } from '@nestjs/core';
-import { PoliciesGuard } from './auth/guards/policies.guard';
+import { PoliciesGuard } from './auth/casl/guards/policies.guard';
 import { AuthModule } from './auth/auth.module';
 import { CaslModule } from './auth/casl/casl.module';
 import { JwtModule } from '@nestjs/jwt';
