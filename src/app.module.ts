@@ -10,6 +10,7 @@ import { UsersModule } from './users/users.module';
 import { AsyncLocalStorage } from 'async_hooks';
 import 'dotenv/config';
 import { entities } from './database/entities';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -23,6 +24,12 @@ import { entities } from './database/entities';
       entities: entities,
       synchronize: false,
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 5,
+      },
+    ]),
     AuthModule,
     CaslModule,
     UsersModule,
@@ -44,6 +51,10 @@ import { entities } from './database/entities';
     {
       provide: AsyncLocalStorage,
       useValue: new AsyncLocalStorage()
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })

@@ -25,6 +25,7 @@
       SwaggerModule.setup('docs', app, documentFactory);
     }
 
+    app.getHttpAdapter().getInstance().set('trust proxy', true);
     app.use(cookieParser());
     app.useGlobalPipes(new ValidationPipe());
     await app.listen(process.env.PORT ?? 3000);

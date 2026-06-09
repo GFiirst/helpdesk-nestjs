@@ -9,6 +9,7 @@ import { Request, Response } from 'express';
 import { RefreshTokenGuard } from "./guards/refresh-token.guard";
 import { AppAbility, CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { Action } from "src/casl/enums/casl-action";
+import { Throttle } from "@nestjs/throttler";
 
 @Controller('auth')
 export class AuthController {
@@ -19,6 +20,7 @@ export class AuthController {
 
     @Post('/sign-up')
     @Public()
+    @Throttle({ default: { limit: 5, ttl: 300000 }})
     @ApiBody({type: CreateUserDto})
     async signUp(
         @Body() createUserDto: CreateUserDto
@@ -28,6 +30,7 @@ export class AuthController {
 
     @Post('/login')
     @Public()
+    @Throttle({ default: { limit: 5, ttl: 300000 }})
     @ApiBody({type: LoginCredentialsDto})
     async login(
         @Body() loginCredential: LoginCredentialsDto,
@@ -39,6 +42,7 @@ export class AuthController {
 
     @Post('/refresh')
     @Public()
+    @Throttle({ default: { limit: 5, ttl: 300000 }})
     @UseGuards(RefreshTokenGuard)
     async refreshToken(
         @Req() req: Request,
@@ -49,6 +53,7 @@ export class AuthController {
 
     @Post('/logout')
     @Public()
+    @Throttle({ default: { limit: 5, ttl: 300000 }})
     async logout(
         @Req() req: Request,
         @Res({ passthrough: true }) res: Response,
