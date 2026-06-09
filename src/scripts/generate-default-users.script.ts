@@ -5,6 +5,7 @@ import { Credential } from "src/auth/entities/credential.entity";
 import { User } from "src/users/entity/user.entity";
 import { Profile } from "src/users/entity/profile.entity";
 import * as bcrypt from "bcrypt";
+import { Branches } from "src/branches/branches.entity";
 
 async function generateDefaultUsers() {
     await AppDataSource.initialize();
@@ -13,6 +14,7 @@ async function generateDefaultUsers() {
     const roleRepository = AppDataSource.getRepository(Roles);
     const userRepository = AppDataSource.getRepository(User);
     const profileRepository = AppDataSource.getRepository(Profile);
+    const branchRepository = AppDataSource.getRepository(Branches);
 
     const existsAdminUser = await credentialRepository.findOne({
         where: {
@@ -21,11 +23,22 @@ async function generateDefaultUsers() {
     })
 
     if(!existsAdminUser) {
-        await adminUser(roleRepository, credentialRepository, userRepository, profileRepository)
+        await adminUser(roleRepository, credentialRepository, userRepository, profileRepository, branchRepository)
     }
 }
 
-async function adminUser(roleRepository: any, credentialRepository: any, userRepository: any, profileRepository: any) {
+async function adminUser(roleRepository: any, credentialRepository: any, userRepository: any, profileRepository: any, branchRepository: any) {
+
+    const adminBranch = await branchRepository.findOne({
+        where: {
+            name: process.env.ADMIN_BRANCH!
+        }
+    })
+    
+    if(!adminBranch) {
+        throw new Error("Admin branch not found. Please run the generate-default-branches script first.");
+    }
+
     const adminRole = await roleRepository.findOne({
         where: {
             role: UserRoles.ADMIN
