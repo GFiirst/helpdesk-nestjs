@@ -58,6 +58,7 @@ async function adminUser(roleRepository: any, credentialRepository: any, userRep
     const user = new User();
     user.credential = credential;
     user.roles = [adminRole];
+    user.branches = [adminBranch];
     await userRepository.save(user);
 
     const profile = new Profile();
