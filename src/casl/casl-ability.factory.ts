@@ -2,7 +2,7 @@ import { AbilityBuilder, createMongoAbility, MongoAbility, MongoQuery } from "@c
 import { Injectable } from "@nestjs/common";
 import { Subjects } from "./enums/casl-subject";
 import { Action } from "./enums/casl-action";
-import { User } from "src/users/entity/users.entity";
+import { User } from "src/users/entity/user.entity";
 
 @Injectable()
 export class CaslAbilityFactory {

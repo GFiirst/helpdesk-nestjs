@@ -2,7 +2,7 @@ import { AppDataSource } from "src/database/data-source";
 import { UserRoles } from "src/roles/enums/user-roles";
 import { Roles } from "src/roles/roles.entity";
 import { Credential } from "src/auth/entities/credential.entity";
-import { User } from "src/users/entity/users.entity";
+import { User } from "src/users/entity/user.entity";
 import { Profile } from "src/users/entity/profile.entity";
 import * as bcrypt from "bcrypt";
 

@@ -3,6 +3,7 @@ import { BaseEntity } from "src/database/base-entity";
 import { Roles } from "src/roles/roles.entity";
 import { Entity, JoinColumn, JoinTable, ManyToMany, OneToOne } from "typeorm";
 import { Profile } from "./profile.entity";
+import { Branches } from "src/branches/branches.entity";
 
 @Entity()
 export class User extends BaseEntity {
@@ -17,4 +18,7 @@ export class User extends BaseEntity {
     @OneToOne(() => Profile, profile => profile.user)
     @JoinColumn()
     profile: Profile;
+
+    @ManyToMany(() => Branches, (branch) => branch.users)
+    branches: Branches[];
 }

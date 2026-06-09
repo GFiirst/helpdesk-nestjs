@@ -1,6 +1,6 @@
 import { BaseEntity } from "src/database/base-entity";
-import { Column, Entity, OneToOne } from "typeorm";
-import { User } from "./users.entity";
+import { Column, Entity, ManyToMany, OneToOne } from "typeorm";
+import { User } from "./user.entity";
 
 @Entity()
 export class Profile extends BaseEntity{
@@ -13,10 +13,6 @@ export class Profile extends BaseEntity{
     //new table soon
     @Column({ nullable: true })
     department: string;
-
-    //new table soon
-    @Column({ nullable: true })
-    branch: string;
 
     //new table soon
     @Column({ nullable: true })
