@@ -55,10 +55,4 @@ export class AuthController {
     ){
         return await this.authService.logout( req, res)
     }
-
-    @Get('/auth-test')
-    @CheckPolicies((ability: AppAbility) => ability.can(Action.Manage, "manage"))
-    async authTest(){
-        return {message: "You are authenticated"};
-    }
 }
