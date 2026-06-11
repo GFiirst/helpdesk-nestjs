@@ -17,7 +17,12 @@ export class BranchesService {
 
     async createBranch(dto: createBranchDto, user: User){
 
-        const userPermission = user.branches.map(branch => branch.name);
+        const userWithBranches = await this.userRepository.findOne({
+            where: { id: user.id },
+            relations: ['branches']
+        })
+        
+        const userPermission = (userWithBranches?.branches ?? []).map(branch => branch.name);
 
         if(!userPermission.includes(process.env.ADMIN_BRANCH!)){
             throw new ForbiddenException('You do not have permission to create a branch')

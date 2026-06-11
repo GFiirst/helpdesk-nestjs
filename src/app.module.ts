@@ -11,6 +11,7 @@ import { AsyncLocalStorage } from 'async_hooks';
 import 'dotenv/config';
 import { entities } from './database/entities';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { BranchesModule } from './branches/branches.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
     AuthModule,
     CaslModule,
     UsersModule,
+    BranchesModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET,
       global: true

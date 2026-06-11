@@ -1,9 +1,11 @@
-import { Body, Controller, Post, Req } from "@nestjs/common";
+import { Body, Controller, Get, Post, Req } from "@nestjs/common";
 import { BranchesService } from "./branches.services";
 import { AppAbility, CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { Action } from "src/casl/enums/casl-action";
 import { createBranchDto } from "./dto/create-branch.dto";
 import { ApiBody } from "@nestjs/swagger";
+import { Public } from "src/auth/decorators/is-public.decorator";
+import { User } from "src/users/entity/user.entity";
 
 @Controller('branches')
 export class BranchesController{
@@ -18,7 +20,11 @@ export class BranchesController{
         @Body() dto: createBranchDto,
         @Req() request
     ){  
-        const user = request.user;
-        await this.branchesService.createBranch(dto, user)
+        const user: User = request.user;
+        return this.branchesService.createBranch(dto, user)
     }
+
+    @Get('')
+    @Public()
+    async getBranches(){}
 }
