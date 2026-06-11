@@ -19,7 +19,7 @@ export class AuthController {
     ) {}
 
     @Post('/sign-up')
-    @Public()
+    @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, "user"))
     @Throttle({ default: { limit: 5, ttl: 300000 }})
     @ApiBody({type: CreateUserDto})
     async signUp(

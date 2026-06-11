@@ -6,4 +6,8 @@ export const PERMISSIONS = {
         permissions: `manage.${Action.Manage}`,
         roles: [UserRoles.ADMIN]
     }],
+    user: [{
+        permissions: `user.${Action.Create}`,
+        roles: [UserRoles.MANAGER]
+    }],
 }
