@@ -1,13 +1,14 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Credential } from "../auth/entities/credential.entity";
-import { DataSource, Repository } from "typeorm";
+import { DataSource, In, Repository } from "typeorm";
 import { CreateUserDto } from "./dto/create-user.dto";
 import * as bcrypt from "bcrypt";
 import { Roles } from "src/roles/roles.entity";
 import { UserRoles } from "src/roles/enums/user-roles";
 import { User } from "./entity/user.entity";
 import { Profile } from "./entity/profile.entity";
+import { Branches } from "src/branches/branches.entity";
 
 @Injectable()
 export class UsersService {
@@ -51,9 +52,18 @@ export class UsersService {
                 throw new NotFoundException("Default role not found");
             }
 
+            const branches = await manager.find(Branches, {
+                where: { id: In(dto.branches) },
+            });
+
+            if (branches.length !== dto.branches.length) {
+                throw new BadRequestException("One or more branches are invalid.");
+            }
+
             const user = manager.create(User, {
                 credential,
                 roles: [role],
+                branches,
             });
 
             await manager.save(user);
