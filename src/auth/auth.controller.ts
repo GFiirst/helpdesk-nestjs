@@ -25,7 +25,7 @@ export class AuthController {
     async signUp(
         @Body() createUserDto: CreateUserDto
     ){
-        return await this.usersService.createUser(createUserDto);
+        return this.usersService.createUser(createUserDto);
     }
 
     @Post('/login')
@@ -37,7 +37,7 @@ export class AuthController {
         @Req() req: Request,
         @Res({ passthrough: true }) res: Response,
     ){
-        return await this.authService.login(loginCredential, req, res);
+        return this.authService.login(loginCredential, req, res);
     }
 
     @Post('/refresh')
@@ -48,7 +48,7 @@ export class AuthController {
         @Req() req: Request,
         @Res({ passthrough: true }) res: Response,
     ){
-        return await this.authService.refreshToken( req, res)
+        return this.authService.refreshToken( req, res)
     }
 
     @Post('/logout')
@@ -58,6 +58,6 @@ export class AuthController {
         @Req() req: Request,
         @Res({ passthrough: true }) res: Response,
     ){
-        return await this.authService.logout( req, res)
+        return this.authService.logout( req, res)
     }
 }
