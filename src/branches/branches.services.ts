@@ -56,4 +56,25 @@ export class BranchesService {
             }
         })
     }
+
+    async listAllBranches(user: User){
+
+        const userWithBranches = await this.userRepository.findOne({
+            where: { id: user.id },
+            relations: ['branches']
+        })
+        
+        const userPermission = (userWithBranches?.branches ?? []).map(branch => branch.name);
+
+        if(!userPermission.includes(process.env.ADMIN_BRANCH!)){
+            throw new ForbiddenException('You do not have permission to view all branches')
+        }
+
+        return this.branchesRepository.find({
+            select: {
+                id: true,
+                name: true
+            }
+        })
+    }
 }
