@@ -1,18 +1,27 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import { ConflictException, ForbiddenException, Injectable } from "@nestjs/common";
 import { Branches } from "./branches.entity";
 import { DataSource, Repository } from "typeorm";
 import { InjectRepository } from "@nestjs/typeorm";
 import { createBranchDto } from "./dto/create-branch.dto";
+import { User } from "src/users/entity/user.entity";
 
 @Injectable()
 export class BranchesService {
     constructor(
         @InjectRepository(Branches)
         private branchesRepository: Repository<Branches>,
+        @InjectRepository(User)
+        private userRepository: Repository<User>,
         private readonly dataSource: DataSource,
     ){}
 
-    async createBranch(dto: createBranchDto){
+    async createBranch(dto: createBranchDto, user: User){
+
+        const userPermission = user.branches.map(branch => branch.name);
+
+        if(!userPermission.includes(process.env.ADMIN_BRANCH!)){
+            throw new ForbiddenException('You do not have permission to create a branch')
+        }
         
         const existingBranch = await this.branchesRepository.findOne(
             {

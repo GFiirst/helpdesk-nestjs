@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Post, Req } from "@nestjs/common";
 import { BranchesService } from "./branches.services";
 import { AppAbility, CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { Action } from "src/casl/enums/casl-action";
@@ -15,8 +15,10 @@ export class BranchesController{
     @ApiBody({type: createBranchDto})
     @CheckPolicies((ability: AppAbility) => ability.can(Action.Manage, "manage"))
     async createBranch(
-        @Body() dto: createBranchDto
-    ){
-        await this.branchesService.createBranch(dto)
+        @Body() dto: createBranchDto,
+        @Req() request
+    ){  
+        const user = request.user;
+        await this.branchesService.createBranch(dto, user)
     }
 }
