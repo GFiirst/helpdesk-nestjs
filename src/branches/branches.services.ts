@@ -1,6 +1,6 @@
 import { ConflictException, ForbiddenException, Injectable } from "@nestjs/common";
 import { Branches } from "./branches.entity";
-import { DataSource, Repository } from "typeorm";
+import { DataSource, Not, Repository } from "typeorm";
 import { InjectRepository } from "@nestjs/typeorm";
 import { createBranchDto } from "./dto/create-branch.dto";
 import { User } from "src/users/entity/user.entity";
@@ -43,5 +43,17 @@ export class BranchesService {
         await this.branchesRepository.save(branch);
 
         return branch;
+    }
+
+    async listBranches(){
+        return this.branchesRepository.find({
+            where: {
+                name: Not(process.env.ADMIN_BRANCH!)
+            },
+            select: {
+                id: true,
+                name: true
+            }
+        })
     }
 }

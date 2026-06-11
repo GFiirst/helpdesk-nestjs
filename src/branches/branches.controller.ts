@@ -24,7 +24,9 @@ export class BranchesController{
         return this.branchesService.createBranch(dto, user)
     }
 
-    @Get('')
+    @Get()
     @Public()
-    async getBranches(){}
+    async listBranches(){
+        return this.branchesService.listBranches()
+    }
 }
