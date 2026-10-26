@@ -15,6 +15,7 @@ import { BranchesModule } from './branches/branches.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { validateEnvironment } from './config/environment';
 import { HealthModule } from './health/health.module';
+import { AuditModule } from './audit/audit.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { HealthModule } from './health/health.module';
     UsersModule,
     BranchesModule,
     HealthModule,
+    AuditModule,
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],
