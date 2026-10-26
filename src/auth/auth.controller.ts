@@ -32,6 +32,8 @@ import {
   RefreshResponseDto,
 } from './dto/auth-response.dto';
 import { LoginCredentialsDto } from './dto/login-credentials.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { AuthRequest } from './interfaces/auth-request.interface';
 
@@ -99,5 +101,40 @@ export class AuthController {
   @ApiOkResponse({ type: AuthenticatedUserDto })
   validate(@Req() request: AuthRequest) {
     return this.usersService.toResponse(request.user!);
+  }
+
+  @Post('forgot-password')
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 300_000 } })
+  @ApiOperation({ summary: 'Request a password reset email' })
+  @ApiOkResponse({
+    schema: {
+      example: {
+        message:
+          'If an account exists for this email, password reset instructions will be sent.',
+      },
+    },
+  })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    await this.authService.forgotPassword(dto);
+
+    return {
+      message:
+        'If an account exists for this email, password reset instructions will be sent.',
+    };
+  }
+
+  @Post('reset-password')
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 300_000 } })
+  @ApiOperation({ summary: 'Reset a password with an email token' })
+  @ApiOkResponse({
+    schema: { example: { message: 'Password reset successfully' } },
+  })
+  @ApiUnauthorizedResponse({ description: 'Invalid or expired reset token' })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    await this.authService.resetPassword(dto);
+
+    return { message: 'Password reset successfully' };
   }
 }

@@ -12,8 +12,12 @@ import { RefreshToken } from './entities/refresh-token.entity';
 import { TokenStatus } from './enums/token-status';
 import {
   AuthRequest,
+  PasswordResetPayload,
   RefreshTokenPayload,
 } from './interfaces/auth-request.interface';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -24,6 +28,7 @@ export class AuthService {
     private refreshTokenRepository: Repository<RefreshToken>,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private emailService: EmailService,
   ) {}
 
   async login(
@@ -227,6 +232,93 @@ export class AuthService {
     return {
       success: true,
     };
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto): Promise<void> {
+    this.emailService.ensureAvailable();
+
+    const credential = await this.credentialRepository.findOne({
+      where: { email: dto.email },
+      relations: ['user'],
+    });
+
+    if (!credential) {
+      return;
+    }
+
+    const expirationMinutes = this.configService.getOrThrow<number>(
+      'JWT_RESET_EXPIRATION_MINUTES',
+    );
+    const token = await this.jwtService.signAsync(
+      {
+        sub: credential.user.id,
+        purpose: 'password-reset',
+        passwordVersion: this.hashToken(credential.password),
+      } satisfies PasswordResetPayload,
+      {
+        secret: this.configService.getOrThrow<string>('JWT_RESET_SECRET'),
+        expiresIn: expirationMinutes * 60,
+      },
+    );
+    const frontendUrl = this.configService
+      .getOrThrow<string>('FRONTEND_URL')
+      .replace(/\/$/, '');
+    const resetUrl = `${frontendUrl}/reset-password?token=${encodeURIComponent(token)}`;
+
+    await this.emailService.sendPasswordReset(credential.email, resetUrl);
+  }
+
+  async resetPassword(dto: ResetPasswordDto): Promise<void> {
+    let payload: PasswordResetPayload;
+
+    try {
+      payload = await this.jwtService.verifyAsync<PasswordResetPayload>(
+        dto.token,
+        {
+          secret: this.configService.getOrThrow<string>('JWT_RESET_SECRET'),
+        },
+      );
+    } catch {
+      throw new UnauthorizedException(
+        'Password reset token is invalid or expired',
+      );
+    }
+
+    if (payload.purpose !== 'password-reset') {
+      throw new UnauthorizedException('Password reset token is invalid');
+    }
+
+    const hashedPassword = await bcrypt.hash(
+      dto.newPassword,
+      this.configService.getOrThrow<number>('BCRYPT_SALT'),
+    );
+
+    await this.credentialRepository.manager.transaction(async (manager) => {
+      const credential = await manager.findOne(Credential, {
+        where: { user: { id: payload.sub } },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (
+        !credential ||
+        !this.tokenMatches(credential.password, payload.passwordVersion)
+      ) {
+        throw new UnauthorizedException(
+          'Password reset token is invalid or has already been used',
+        );
+      }
+
+      credential.password = hashedPassword;
+      await manager.save(credential);
+      await manager.update(
+        RefreshToken,
+        {
+          credential: { id: credential.id },
+          status: TokenStatus.ACTIVE,
+        },
+        { status: TokenStatus.REVOKED },
+      );
+    });
   }
 
   private extractDevice(userAgent?: string): string {

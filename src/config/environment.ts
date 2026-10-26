@@ -10,12 +10,20 @@ export interface EnvironmentVariables {
   DB_SYNC: boolean;
   JWT_SECRET: string;
   JWT_REFRESH_SECRET: string;
+  JWT_RESET_SECRET: string;
   JWT_ACCESS_EXPIRATION_MINUTES: number;
   JWT_REFRESH_EXPIRATION_DAYS: number;
+  JWT_RESET_EXPIRATION_MINUTES: number;
   COOKIE_SECURE: boolean;
   ORIGIN: string;
   BCRYPT_SALT: number;
   MAX_ACTIVE_SESSIONS: number;
+  FRONTEND_URL: string;
+  MAIL_HOST: string;
+  MAIL_PORT: number;
+  MAIL_SECURE: boolean;
+  MAIL_USER: string;
+  MAIL_PASS: string;
 }
 
 const requiredVariables = [
@@ -86,15 +94,24 @@ export function validateEnvironment(
 
   const jwtSecret = parseString(input.JWT_SECRET);
   const jwtRefreshSecret = parseString(input.JWT_REFRESH_SECRET);
+  const jwtResetSecret = parseString(input.JWT_RESET_SECRET, jwtSecret);
   if (jwtSecret === jwtRefreshSecret) {
     throw new Error('JWT_SECRET and JWT_REFRESH_SECRET must be different');
   }
 
   if (normalizedEnvironment === 'production') {
-    if (jwtSecret.length < 32 || jwtRefreshSecret.length < 32) {
+    if (
+      jwtSecret.length < 32 ||
+      jwtRefreshSecret.length < 32 ||
+      jwtResetSecret.length < 32
+    ) {
       throw new Error(
         'JWT secrets must contain at least 32 characters in production',
       );
+    }
+
+    if (jwtResetSecret === jwtSecret || jwtResetSecret === jwtRefreshSecret) {
+      throw new Error('JWT_RESET_SECRET must be different in production');
     }
   }
 
@@ -111,6 +128,7 @@ export function validateEnvironment(
     DB_SYNC: parseBoolean(input.DB_SYNC, false),
     JWT_SECRET: jwtSecret,
     JWT_REFRESH_SECRET: jwtRefreshSecret,
+    JWT_RESET_SECRET: jwtResetSecret,
     JWT_ACCESS_EXPIRATION_MINUTES: parsePositiveInteger(
       input.JWT_ACCESS_EXPIRATION_MINUTES,
       15,
@@ -120,6 +138,11 @@ export function validateEnvironment(
       input.JWT_REFRESH_EXPIRATION_DAYS,
       30,
       'JWT_REFRESH_EXPIRATION_DAYS',
+    ),
+    JWT_RESET_EXPIRATION_MINUTES: parsePositiveInteger(
+      input.JWT_RESET_EXPIRATION_MINUTES,
+      15,
+      'JWT_RESET_EXPIRATION_MINUTES',
     ),
     COOKIE_SECURE: parseBoolean(
       input.COOKIE_SECURE,
@@ -132,5 +155,11 @@ export function validateEnvironment(
       5,
       'MAX_ACTIVE_SESSIONS',
     ),
+    FRONTEND_URL: parseString(input.FRONTEND_URL, 'http://localhost:3000'),
+    MAIL_HOST: parseString(input.MAIL_HOST, 'smtp.gmail.com'),
+    MAIL_PORT: parsePositiveInteger(input.MAIL_PORT, 587, 'MAIL_PORT'),
+    MAIL_SECURE: parseBoolean(input.MAIL_SECURE, false),
+    MAIL_USER: parseString(input.MAIL_USER),
+    MAIL_PASS: parseString(input.MAIL_PASS),
   };
 }

@@ -13,6 +13,12 @@ export interface RefreshTokenPayload {
   tokenId: string;
 }
 
+export interface PasswordResetPayload {
+  sub: string;
+  purpose: 'password-reset';
+  passwordVersion: string;
+}
+
 export interface AuthRequest extends Request {
   cookies: Record<string, string | undefined>;
   user?: User;
