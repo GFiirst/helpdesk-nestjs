@@ -27,6 +27,7 @@ export interface EnvironmentVariables {
   FILE_PATH: string;
   FILE_MAX_BYTES: number;
   FILE_ENCRYPTION_KEK: string;
+  FIELD_ENCRYPTION_KEY: string;
   APPLY_MIGRATIONS_ON_STARTUP: boolean;
 }
 
@@ -37,13 +38,10 @@ const requiredVariables = [
   'DB_NAME',
   'JWT_SECRET',
   'JWT_REFRESH_SECRET',
+  'FIELD_ENCRYPTION_KEY',
 ] as const;
 
-function parsePositiveInteger(
-  value: unknown,
-  fallback: number,
-  variableName: string,
-): number {
+function parsePositiveInteger(value: unknown, fallback: number, variableName: string): number {
   const parsed = Number(value ?? fallback);
 
   if (!Number.isInteger(parsed) || parsed <= 0) {
@@ -73,24 +71,15 @@ function parseBoolean(value: unknown, fallback: boolean): boolean {
   throw new Error('Expected a boolean value');
 }
 
-export function validateEnvironment(
-  input: Record<string, unknown>,
-): EnvironmentVariables & Record<string, unknown> {
+export function validateEnvironment(input: Record<string, unknown>): EnvironmentVariables & Record<string, unknown> {
   for (const variableName of requiredVariables) {
-    if (
-      typeof input[variableName] !== 'string' ||
-      !input[variableName].trim()
-    ) {
+    if (typeof input[variableName] !== 'string' || !input[variableName].trim()) {
       throw new Error(`${variableName} is required`);
     }
   }
 
-  const nodeEnvironment = parseString(
-    input.NODE_ENV ?? input.ENV,
-    'development',
-  );
-  const normalizedEnvironment =
-    nodeEnvironment === 'dev' ? 'development' : nodeEnvironment;
+  const nodeEnvironment = parseString(input.NODE_ENV ?? input.ENV, 'development');
+  const normalizedEnvironment = nodeEnvironment === 'dev' ? 'development' : nodeEnvironment;
 
   if (!['development', 'test', 'production'].includes(normalizedEnvironment)) {
     throw new Error('NODE_ENV must be development, test, or production');
@@ -99,19 +88,17 @@ export function validateEnvironment(
   const jwtSecret = parseString(input.JWT_SECRET);
   const jwtRefreshSecret = parseString(input.JWT_REFRESH_SECRET);
   const jwtResetSecret = parseString(input.JWT_RESET_SECRET, jwtSecret);
+  const fieldEncryptionKey = parseString(input.FIELD_ENCRYPTION_KEY);
+  if (Buffer.from(fieldEncryptionKey, 'base64').length !== 32) {
+    throw new Error('FIELD_ENCRYPTION_KEY must contain exactly 32 Base64-encoded bytes');
+  }
   if (jwtSecret === jwtRefreshSecret) {
     throw new Error('JWT_SECRET and JWT_REFRESH_SECRET must be different');
   }
 
   if (normalizedEnvironment === 'production') {
-    if (
-      jwtSecret.length < 32 ||
-      jwtRefreshSecret.length < 32 ||
-      jwtResetSecret.length < 32
-    ) {
-      throw new Error(
-        'JWT secrets must contain at least 32 characters in production',
-      );
+    if (jwtSecret.length < 32 || jwtRefreshSecret.length < 32 || jwtResetSecret.length < 32) {
+      throw new Error('JWT secrets must contain at least 32 characters in production');
     }
 
     if (jwtResetSecret === jwtSecret || jwtResetSecret === jwtRefreshSecret) {
@@ -133,32 +120,13 @@ export function validateEnvironment(
     JWT_SECRET: jwtSecret,
     JWT_REFRESH_SECRET: jwtRefreshSecret,
     JWT_RESET_SECRET: jwtResetSecret,
-    JWT_ACCESS_EXPIRATION_MINUTES: parsePositiveInteger(
-      input.JWT_ACCESS_EXPIRATION_MINUTES,
-      15,
-      'JWT_ACCESS_EXPIRATION_MINUTES',
-    ),
-    JWT_REFRESH_EXPIRATION_DAYS: parsePositiveInteger(
-      input.JWT_REFRESH_EXPIRATION_DAYS,
-      30,
-      'JWT_REFRESH_EXPIRATION_DAYS',
-    ),
-    JWT_RESET_EXPIRATION_MINUTES: parsePositiveInteger(
-      input.JWT_RESET_EXPIRATION_MINUTES,
-      15,
-      'JWT_RESET_EXPIRATION_MINUTES',
-    ),
-    COOKIE_SECURE: parseBoolean(
-      input.COOKIE_SECURE,
-      normalizedEnvironment === 'production',
-    ),
+    JWT_ACCESS_EXPIRATION_MINUTES: parsePositiveInteger(input.JWT_ACCESS_EXPIRATION_MINUTES, 15, 'JWT_ACCESS_EXPIRATION_MINUTES'),
+    JWT_REFRESH_EXPIRATION_DAYS: parsePositiveInteger(input.JWT_REFRESH_EXPIRATION_DAYS, 30, 'JWT_REFRESH_EXPIRATION_DAYS'),
+    JWT_RESET_EXPIRATION_MINUTES: parsePositiveInteger(input.JWT_RESET_EXPIRATION_MINUTES, 15, 'JWT_RESET_EXPIRATION_MINUTES'),
+    COOKIE_SECURE: parseBoolean(input.COOKIE_SECURE, normalizedEnvironment === 'production'),
     ORIGIN: parseString(input.ORIGIN, 'http://localhost:3000'),
     BCRYPT_SALT: parsePositiveInteger(input.BCRYPT_SALT, 12, 'BCRYPT_SALT'),
-    MAX_ACTIVE_SESSIONS: parsePositiveInteger(
-      input.MAX_ACTIVE_SESSIONS,
-      5,
-      'MAX_ACTIVE_SESSIONS',
-    ),
+    MAX_ACTIVE_SESSIONS: parsePositiveInteger(input.MAX_ACTIVE_SESSIONS, 5, 'MAX_ACTIVE_SESSIONS'),
     FRONTEND_URL: parseString(input.FRONTEND_URL, 'http://localhost:3000'),
     MAIL_HOST: parseString(input.MAIL_HOST, 'smtp.gmail.com'),
     MAIL_PORT: parsePositiveInteger(input.MAIL_PORT, 587, 'MAIL_PORT'),
@@ -166,15 +134,9 @@ export function validateEnvironment(
     MAIL_USER: parseString(input.MAIL_USER),
     MAIL_PASS: parseString(input.MAIL_PASS),
     FILE_PATH: parseString(input.FILE_PATH, 'uploads'),
-    FILE_MAX_BYTES: parsePositiveInteger(
-      input.FILE_MAX_BYTES,
-      10 * 1024 * 1024,
-      'FILE_MAX_BYTES',
-    ),
+    FILE_MAX_BYTES: parsePositiveInteger(input.FILE_MAX_BYTES, 10 * 1024 * 1024, 'FILE_MAX_BYTES'),
     FILE_ENCRYPTION_KEK: parseString(input.FILE_ENCRYPTION_KEK),
-    APPLY_MIGRATIONS_ON_STARTUP: parseBoolean(
-      input.APPLY_MIGRATIONS_ON_STARTUP,
-      false,
-    ),
+    FIELD_ENCRYPTION_KEY: fieldEncryptionKey,
+    APPLY_MIGRATIONS_ON_STARTUP: parseBoolean(input.APPLY_MIGRATIONS_ON_STARTUP, false),
   };
 }

@@ -9,6 +9,7 @@ import { Roles } from 'src/roles/roles.entity';
 import { UserRoles } from 'src/roles/enums/user-roles';
 import { User } from './entity/user.entity';
 import { Branches } from 'src/branches/branches.entity';
+import { FieldEncryptionService } from 'src/security/field-encryption.service';
 
 @Injectable()
 export class UsersService {
@@ -19,12 +20,15 @@ export class UsersService {
     private userRepository: Repository<User>,
     private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
+    private readonly fieldEncryptionService: FieldEncryptionService,
   ) {}
 
   async createUser(dto: CreateUserDto) {
     return await this.dataSource.transaction(async (manager) => {
+      const normalizedEmail = this.fieldEncryptionService.normalizeEmail(dto.email);
+      const emailHash = this.fieldEncryptionService.hashEmail(normalizedEmail);
       const existingEmail = await manager.findOne(Credential, {
-        where: { email: dto.email.trim().toLowerCase() },
+        where: { emailHash },
       });
 
       if (existingEmail) {
@@ -34,7 +38,8 @@ export class UsersService {
       const hashedPassword = await bcrypt.hash(dto.password, this.configService.getOrThrow<number>('BCRYPT_SALT'));
 
       const credential = manager.create(Credential, {
-        email: dto.email.trim().toLowerCase(),
+        emailEncrypted: this.fieldEncryptionService.encrypt(normalizedEmail),
+        emailHash,
         password: hashedPassword,
       });
 
@@ -87,7 +92,7 @@ export class UsersService {
   toResponse(user: User) {
     return {
       id: user.id,
-      email: user.credential?.email,
+      email: user.credential?.emailEncrypted ? this.fieldEncryptionService.decrypt(user.credential.emailEncrypted) : undefined,
       roles: user.roles?.map((role) => role.role) ?? [],
     };
   }

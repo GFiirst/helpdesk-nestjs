@@ -14,6 +14,7 @@ import { AuthRequest, PasswordResetPayload, RefreshTokenPayload } from './interf
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { EmailService } from '../email/email.service';
+import { FieldEncryptionService } from '../security/field-encryption.service';
 
 @Injectable()
 export class AuthService {
@@ -25,6 +26,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private emailService: EmailService,
+    private fieldEncryptionService: FieldEncryptionService,
   ) {}
 
   async login(loginCredential: LoginCredentialsDto, req: AuthRequest, res: Response) {
@@ -54,8 +56,9 @@ export class AuthService {
       this.clearAuthCookies(res);
     }
 
+    const normalizedEmail = this.fieldEncryptionService.normalizeEmail(loginCredential.email);
     const existingCredential = await this.credentialRepository.findOne({
-      where: { email: loginCredential.email.trim().toLowerCase() },
+      where: { emailHash: this.fieldEncryptionService.hashEmail(normalizedEmail) },
       relations: ['user', 'user.roles'],
     });
 
@@ -90,7 +93,6 @@ export class AuthService {
     }
 
     const payload = {
-      email: existingCredential.email,
       sub: existingCredential.user.id,
     };
 
@@ -146,7 +148,6 @@ export class AuthService {
     }
 
     const payload = {
-      email: credential.email,
       sub: credential.user.id,
     };
 
@@ -199,8 +200,9 @@ export class AuthService {
   async forgotPassword(dto: ForgotPasswordDto): Promise<void> {
     this.emailService.ensureAvailable();
 
+    const normalizedEmail = this.fieldEncryptionService.normalizeEmail(dto.email);
     const credential = await this.credentialRepository.findOne({
-      where: { email: dto.email },
+      where: { emailHash: this.fieldEncryptionService.hashEmail(normalizedEmail) },
       relations: ['user'],
     });
 
@@ -223,7 +225,7 @@ export class AuthService {
     const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL').replace(/\/$/, '');
     const resetUrl = `${frontendUrl}/reset-password?token=${encodeURIComponent(token)}`;
 
-    await this.emailService.sendPasswordReset(credential.email, resetUrl);
+    await this.emailService.sendPasswordReset(this.fieldEncryptionService.decrypt(credential.emailEncrypted), resetUrl);
   }
 
   async resetPassword(dto: ResetPasswordDto): Promise<void> {
@@ -327,7 +329,7 @@ export class AuthService {
   private toAuthenticatedUser(credential: Credential) {
     return {
       id: credential.user.id,
-      email: credential.email,
+      email: this.fieldEncryptionService.decrypt(credential.emailEncrypted),
       roles: credential.user.roles?.map((role) => role.role) ?? [],
     };
   }

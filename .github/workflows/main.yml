@@ -38,6 +38,7 @@ jobs:
       JWT_SECRET: ci-access-secret
       JWT_REFRESH_SECRET: ci-refresh-secret
       JWT_RESET_SECRET: ci-reset-secret
+      FIELD_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
       COOKIE_SECURE: 'false'
       ORIGIN: http://localhost:3000
       BCRYPT_SALT: 4

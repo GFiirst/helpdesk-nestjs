@@ -5,7 +5,6 @@ import { RefreshToken } from '../entities/refresh-token.entity';
 
 export interface AccessTokenPayload {
   sub: string;
-  email: string;
 }
 
 export interface RefreshTokenPayload {

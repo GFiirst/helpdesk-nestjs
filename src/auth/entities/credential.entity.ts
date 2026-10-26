@@ -5,12 +5,15 @@ import { User } from 'src/users/entity/user.entity';
 
 @Entity()
 export class Credential extends BaseEntity {
-  @Index('credential_email_unique_active', ['email'], {
+  @Index('credential_email_hash_unique_active', ['emailHash'], {
     unique: true,
     where: '"deletedAt" IS NULL',
   })
-  @Column({ length: 255 })
-  email: string;
+  @Column({ length: 512 })
+  emailEncrypted: string;
+
+  @Column({ length: 64 })
+  emailHash: string;
 
   @Column({ length: 255 })
   password: string;

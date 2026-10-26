@@ -16,6 +16,7 @@ import { validateEnvironment } from './config/environment';
 import { HealthModule } from './health/health.module';
 import { AuditModule } from './audit/audit.module';
 import { UploadModule } from './upload/upload.module';
+import { SecurityModule } from './security/security.module';
 
 @Module({
   imports: [
@@ -35,9 +36,7 @@ import { UploadModule } from './upload/upload.module';
         entities,
         synchronize: config.getOrThrow<boolean>('DB_SYNC'),
         migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
-        migrationsRun: config.getOrThrow<boolean>(
-          'APPLY_MIGRATIONS_ON_STARTUP',
-        ),
+        migrationsRun: config.getOrThrow<boolean>('APPLY_MIGRATIONS_ON_STARTUP'),
       }),
     }),
     ThrottlerModule.forRoot([
@@ -53,6 +52,7 @@ import { UploadModule } from './upload/upload.module';
     HealthModule,
     AuditModule,
     UploadModule,
+    SecurityModule,
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],

@@ -7,6 +7,7 @@ const validEnvironment = {
   DB_NAME: 'helpdesk',
   JWT_SECRET: 'access-secret',
   JWT_REFRESH_SECRET: 'refresh-secret',
+  FIELD_ENCRYPTION_KEY: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
 };
 
 describe('validateEnvironment', () => {
@@ -44,5 +45,14 @@ describe('validateEnvironment', () => {
         NODE_ENV: 'production',
       }),
     ).toThrow('JWT secrets must contain at least 32 characters in production');
+  });
+
+  it('rejects an invalid field encryption key', () => {
+    expect(() =>
+      validateEnvironment({
+        ...validEnvironment,
+        FIELD_ENCRYPTION_KEY: 'invalid',
+      }),
+    ).toThrow('FIELD_ENCRYPTION_KEY must contain exactly 32 Base64-encoded bytes');
   });
 });

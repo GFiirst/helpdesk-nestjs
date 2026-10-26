@@ -19,6 +19,7 @@ Tests under `src/**/*.spec.ts` currently verify:
 - recursive audit-log redaction and circular-reference handling;
 - allowed file signatures and spoofed-content rejection;
 - AES-256-GCM encryption round trips and tamper detection.
+- randomized field encryption and stable normalized email hashes.
 
 Unit tests do not require PostgreSQL or SMTP.
 

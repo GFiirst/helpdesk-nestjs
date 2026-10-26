@@ -11,11 +11,16 @@ Enum audit_action {
 
 Table credential {
   id uuid [pk]
-  email varchar(255) [not null]
+  emailEncrypted varchar(512) [not null]
+  emailHash varchar(64) [not null, note: 'HMAC-SHA-256 of the normalized email']
   password varchar(255) [not null]
   createdAt timestamptz [not null]
   updatedAt timestamptz [not null]
   deletedAt timestamptz
+
+  indexes {
+    emailHash [unique, name: 'credential_email_hash_unique_active']
+  }
 }
 
 Table user {

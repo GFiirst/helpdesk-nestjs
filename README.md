@@ -10,7 +10,7 @@ Backend foundation for a helpdesk platform, built with NestJS 11, TypeORM, and P
 - Configurable token expiration and a five-session default limit.
 - Refresh tokens stored as SHA-256 hashes and compared in constant time.
 - Password recovery by email with single-use reset tokens.
-- BCrypt password hashing and normalized email addresses.
+- BCrypt password hashing, AES-256-GCM encrypted email addresses, and keyed email hashes for lookup and uniqueness.
 - CASL-based role and permission checks.
 - Automatic, sanitized audit logs for database mutations.
 - Client IPs stored in audit logs only as SHA-256 hashes.
@@ -73,6 +73,8 @@ JWT_ACCESS_EXPIRATION_MINUTES=15
 JWT_REFRESH_EXPIRATION_DAYS=30
 JWT_RESET_EXPIRATION_MINUTES=15
 
+FIELD_ENCRYPTION_KEY=<32-byte-key-in-base64>
+
 ORIGIN=http://localhost:3000
 COOKIE_SECURE=false
 FRONTEND_URL=http://localhost:3000
@@ -88,13 +90,13 @@ FILE_MAX_BYTES=10485760
 FILE_ENCRYPTION_KEK=
 ```
 
-Generate the 32-byte file key encryption key with:
+Generate both 32-byte encryption keys with:
 
 ```bash
 openssl rand -base64 32
 ```
 
-Do not rotate `FILE_ENCRYPTION_KEK` without re-encrypting existing files. In production, all JWT secrets must contain at least 32 characters and the reset secret must differ from the access and refresh secrets.
+Do not rotate `FIELD_ENCRYPTION_KEY` or `FILE_ENCRYPTION_KEK` without migrating the encrypted data. Losing `FIELD_ENCRYPTION_KEY` makes email addresses unreadable and changes their lookup hashes. In production, all JWT secrets must contain at least 32 characters and the reset secret must differ from the access and refresh secrets.
 
 ## Install and run
 
@@ -179,6 +181,10 @@ All new endpoints are protected by default. Apply `@Public()` only when anonymou
 TypeORM inserts, updates, and deletes are written to `audit_log`. Passwords, tokens, secrets, authorization data, cookies, credentials, hashes, encrypted values, and keys are recursively redacted. Cyclic structures are handled safely. Request IP addresses are hashed before persistence.
 
 Apply the migrations before enabling writes after upgrading to this version.
+
+## Sensitive database fields
+
+Credential email addresses are normalized and encrypted with AES-256-GCM before persistence. A separate HMAC-SHA-256 value supports indexed login, uniqueness checks, and password recovery without decrypting every row. Plaintext email addresses are only produced at authenticated response and email-delivery boundaries, and they are not included in JWT claims.
 
 ## Encrypted file storage
 

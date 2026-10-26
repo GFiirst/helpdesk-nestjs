@@ -5,6 +5,8 @@ describe('AuditValueSanitizer', () => {
     expect(
       AuditValueSanitizer.sanitize({
         email: 'user@example.com',
+        emailEncrypted: 'ciphertext',
+        emailHash: 'email-hash',
         password: 'secret-value',
         nested: {
           access_token: 'jwt',
@@ -13,6 +15,8 @@ describe('AuditValueSanitizer', () => {
       }),
     ).toEqual({
       email: 'user@example.com',
+      emailEncrypted: '[REDACTED]',
+      emailHash: '[REDACTED]',
       password: '[REDACTED]',
       nested: {
         access_token: '[REDACTED]',
