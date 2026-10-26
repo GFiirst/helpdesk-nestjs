@@ -1,13 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import {
-  DataSource,
-  EntitySubscriberInterface,
-  EventSubscriber,
-  InsertEvent,
-  RemoveEvent,
-  UpdateEvent,
-} from 'typeorm';
+import { DataSource, EntitySubscriberInterface, EventSubscriber, InsertEvent, RemoveEvent, UpdateEvent } from 'typeorm';
 import { AuditAction } from './audit-action.enum';
 import { AuditContext } from './audit-context.interceptor';
 import { AuditLog } from './audit-log.entity';
@@ -24,36 +17,18 @@ export class AuditSubscriber implements EntitySubscriberInterface {
   }
 
   async afterInsert(event: InsertEvent<unknown>): Promise<void> {
-    await this.write(
-      event,
-      AuditAction.CREATE,
-      this.entityId(event.entity),
-      event.entity,
-    );
+    await this.write(event, AuditAction.CREATE, this.entityId(event.entity), event.entity);
   }
 
   async afterUpdate(event: UpdateEvent<unknown>): Promise<void> {
     const changes = Object.fromEntries(
-      event.updatedColumns.map((column) => [
-        column.propertyName,
-        this.propertyValue(event.entity, column.propertyName),
-      ]),
+      event.updatedColumns.map((column) => [column.propertyName, this.propertyValue(event.entity, column.propertyName)]),
     );
-    await this.write(
-      event,
-      AuditAction.UPDATE,
-      this.entityId(event.entity ?? event.databaseEntity),
-      changes,
-    );
+    await this.write(event, AuditAction.UPDATE, this.entityId(event.entity ?? event.databaseEntity), changes);
   }
 
   async afterRemove(event: RemoveEvent<unknown>): Promise<void> {
-    await this.write(
-      event,
-      AuditAction.DELETE,
-      String(event.entityId ?? this.entityId(event.databaseEntity) ?? ''),
-      null,
-    );
+    await this.write(event, AuditAction.DELETE, String(event.entityId ?? this.entityId(event.databaseEntity) ?? ''), null);
   }
 
   private async write(
@@ -73,8 +48,7 @@ export class AuditSubscriber implements EntitySubscriberInterface {
     auditLog.entityId = entityId || null;
     auditLog.actorId = context?.actorId ?? null;
     auditLog.ipHash = context?.ipHash ?? null;
-    auditLog.changes = (AuditValueSanitizer.sanitize(changes) ??
-      null) as Record<string, unknown> | null;
+    auditLog.changes = (AuditValueSanitizer.sanitize(changes) ?? null) as Record<string, unknown> | null;
 
     await event.manager.save(AuditLog, auditLog);
   }
@@ -85,9 +59,7 @@ export class AuditSubscriber implements EntitySubscriberInterface {
     }
 
     const id = entity.id;
-    return typeof id === 'string' || typeof id === 'number'
-      ? String(id)
-      : undefined;
+    return typeof id === 'string' || typeof id === 'number' ? String(id) : undefined;
   }
 
   private propertyValue(entity: unknown, propertyName: string): unknown {

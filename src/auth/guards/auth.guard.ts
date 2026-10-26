@@ -1,18 +1,10 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from 'src/users/users.service';
 import { IS_PUBLIC_KEY } from '../decorators/is-public.decorator';
-import {
-  AccessTokenPayload,
-  AuthRequest,
-} from '../interfaces/auth-request.interface';
+import { AccessTokenPayload, AuthRequest } from '../interfaces/auth-request.interface';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -27,10 +19,7 @@ export class AuthGuard implements CanActivate {
     const req = context.switchToHttp().getRequest<AuthRequest>();
     const token = this.extractTokenFromCookie(req);
 
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [context.getHandler(), context.getClass()]);
 
     if (isPublic) {
       return true;
@@ -40,16 +29,11 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException();
     }
     try {
-      const payload = await this.jwtService.verifyAsync<AccessTokenPayload>(
-        token,
-        {
-          secret: this.configService.getOrThrow<string>('JWT_SECRET'),
-        },
-      );
+      const payload = await this.jwtService.verifyAsync<AccessTokenPayload>(token, {
+        secret: this.configService.getOrThrow<string>('JWT_SECRET'),
+      });
 
-      const user = await this.usersService.findByIdWithRolesAndPermissions(
-        payload.sub,
-      );
+      const user = await this.usersService.findByIdWithRolesAndPermissions(payload.sub);
 
       if (!user) {
         throw new UnauthorizedException();

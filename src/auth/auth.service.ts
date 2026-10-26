@@ -10,11 +10,7 @@ import { Repository } from 'typeorm';
 import { LoginCredentialsDto } from './dto/login-credentials.dto';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { TokenStatus } from './enums/token-status';
-import {
-  AuthRequest,
-  PasswordResetPayload,
-  RefreshTokenPayload,
-} from './interfaces/auth-request.interface';
+import { AuthRequest, PasswordResetPayload, RefreshTokenPayload } from './interfaces/auth-request.interface';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { EmailService } from '../email/email.service';
@@ -31,21 +27,14 @@ export class AuthService {
     private emailService: EmailService,
   ) {}
 
-  async login(
-    loginCredential: LoginCredentialsDto,
-    req: AuthRequest,
-    res: Response,
-  ) {
+  async login(loginCredential: LoginCredentialsDto, req: AuthRequest, res: Response) {
     const existingRefreshToken = req.cookies?.refresh_token;
 
     if (existingRefreshToken) {
       try {
-        const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(
-          existingRefreshToken,
-          {
-            secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
-          },
-        );
+        const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(existingRefreshToken, {
+          secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
+        });
 
         const storedToken = await this.refreshTokenRepository.findOne({
           where: {
@@ -53,10 +42,7 @@ export class AuthService {
           },
         });
 
-        if (
-          storedToken &&
-          this.tokenMatches(existingRefreshToken, storedToken.tokenHash)
-        ) {
+        if (storedToken && this.tokenMatches(existingRefreshToken, storedToken.tokenHash)) {
           storedToken.status = TokenStatus.REVOKED;
 
           await this.refreshTokenRepository.save(storedToken);
@@ -77,18 +63,13 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const validPass = await bcrypt.compare(
-      loginCredential.password,
-      existingCredential.password,
-    );
+    const validPass = await bcrypt.compare(loginCredential.password, existingCredential.password);
 
     if (!validPass) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const maxSessions = this.configService.getOrThrow<number>(
-      'MAX_ACTIVE_SESSIONS',
-    );
+    const maxSessions = this.configService.getOrThrow<number>('MAX_ACTIVE_SESSIONS');
 
     const activeSessions = await this.refreshTokenRepository.find({
       where: {
@@ -113,18 +94,10 @@ export class AuthService {
       sub: existingCredential.user.id,
     };
 
-    const accessExpirationMinutes = this.configService.getOrThrow<number>(
-      'JWT_ACCESS_EXPIRATION_MINUTES',
-    );
-    const refreshExpirationDays = this.configService.getOrThrow<number>(
-      'JWT_REFRESH_EXPIRATION_DAYS',
-    );
-    const accessExpiresAt = new Date(
-      Date.now() + accessExpirationMinutes * 60_000,
-    );
-    const refreshExpiresAt = new Date(
-      Date.now() + refreshExpirationDays * 86_400_000,
-    );
+    const accessExpirationMinutes = this.configService.getOrThrow<number>('JWT_ACCESS_EXPIRATION_MINUTES');
+    const refreshExpirationDays = this.configService.getOrThrow<number>('JWT_REFRESH_EXPIRATION_DAYS');
+    const accessExpiresAt = new Date(Date.now() + accessExpirationMinutes * 60_000);
+    const refreshExpiresAt = new Date(Date.now() + refreshExpirationDays * 86_400_000);
 
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.getOrThrow<string>('JWT_SECRET'),
@@ -135,10 +108,7 @@ export class AuthService {
 
     refreshTokenEntity.tokenHash = randomBytes(32).toString('hex');
     refreshTokenEntity.userAgent = req.headers['user-agent'] || 'unknown';
-    refreshTokenEntity.ip =
-      (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
-      req.socket.remoteAddress ||
-      'unknown';
+    refreshTokenEntity.ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
     refreshTokenEntity.device = this.extractDevice(req.headers['user-agent']);
     refreshTokenEntity.expiresAt = refreshExpiresAt;
     refreshTokenEntity.credential = existingCredential;
@@ -180,9 +150,7 @@ export class AuthService {
       sub: credential.user.id,
     };
 
-    const expirationMinutes = this.configService.getOrThrow<number>(
-      'JWT_ACCESS_EXPIRATION_MINUTES',
-    );
+    const expirationMinutes = this.configService.getOrThrow<number>('JWT_ACCESS_EXPIRATION_MINUTES');
     const expiresAt = new Date(Date.now() + expirationMinutes * 60_000);
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.getOrThrow<string>('JWT_SECRET'),
@@ -201,12 +169,9 @@ export class AuthService {
 
     if (refreshToken) {
       try {
-        const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(
-          refreshToken,
-          {
-            secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
-          },
-        );
+        const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(refreshToken, {
+          secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
+        });
 
         const storedToken = await this.refreshTokenRepository.findOne({
           where: {
@@ -214,10 +179,7 @@ export class AuthService {
           },
         });
 
-        if (
-          storedToken &&
-          this.tokenMatches(refreshToken, storedToken.tokenHash)
-        ) {
+        if (storedToken && this.tokenMatches(refreshToken, storedToken.tokenHash)) {
           storedToken.status = TokenStatus.REVOKED;
 
           await this.refreshTokenRepository.save(storedToken);
@@ -246,9 +208,7 @@ export class AuthService {
       return;
     }
 
-    const expirationMinutes = this.configService.getOrThrow<number>(
-      'JWT_RESET_EXPIRATION_MINUTES',
-    );
+    const expirationMinutes = this.configService.getOrThrow<number>('JWT_RESET_EXPIRATION_MINUTES');
     const token = await this.jwtService.signAsync(
       {
         sub: credential.user.id,
@@ -260,9 +220,7 @@ export class AuthService {
         expiresIn: expirationMinutes * 60,
       },
     );
-    const frontendUrl = this.configService
-      .getOrThrow<string>('FRONTEND_URL')
-      .replace(/\/$/, '');
+    const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL').replace(/\/$/, '');
     const resetUrl = `${frontendUrl}/reset-password?token=${encodeURIComponent(token)}`;
 
     await this.emailService.sendPasswordReset(credential.email, resetUrl);
@@ -272,26 +230,18 @@ export class AuthService {
     let payload: PasswordResetPayload;
 
     try {
-      payload = await this.jwtService.verifyAsync<PasswordResetPayload>(
-        dto.token,
-        {
-          secret: this.configService.getOrThrow<string>('JWT_RESET_SECRET'),
-        },
-      );
+      payload = await this.jwtService.verifyAsync<PasswordResetPayload>(dto.token, {
+        secret: this.configService.getOrThrow<string>('JWT_RESET_SECRET'),
+      });
     } catch {
-      throw new UnauthorizedException(
-        'Password reset token is invalid or expired',
-      );
+      throw new UnauthorizedException('Password reset token is invalid or expired');
     }
 
     if (payload.purpose !== 'password-reset') {
       throw new UnauthorizedException('Password reset token is invalid');
     }
 
-    const hashedPassword = await bcrypt.hash(
-      dto.newPassword,
-      this.configService.getOrThrow<number>('BCRYPT_SALT'),
-    );
+    const hashedPassword = await bcrypt.hash(dto.newPassword, this.configService.getOrThrow<number>('BCRYPT_SALT'));
 
     await this.credentialRepository.manager.transaction(async (manager) => {
       const credential = await manager.findOne(Credential, {
@@ -299,13 +249,8 @@ export class AuthService {
         lock: { mode: 'pessimistic_write' },
       });
 
-      if (
-        !credential ||
-        !this.tokenMatches(credential.password, payload.passwordVersion)
-      ) {
-        throw new UnauthorizedException(
-          'Password reset token is invalid or has already been used',
-        );
+      if (!credential || !this.tokenMatches(credential.password, payload.passwordVersion)) {
+        throw new UnauthorizedException('Password reset token is invalid or has already been used');
       }
 
       credential.password = hashedPassword;
@@ -357,10 +302,7 @@ export class AuthService {
     const incomingHash = Buffer.from(this.hashToken(token), 'hex');
     const expectedHash = Buffer.from(storedHash, 'hex');
 
-    return (
-      incomingHash.length === expectedHash.length &&
-      timingSafeEqual(incomingHash, expectedHash)
-    );
+    return incomingHash.length === expectedHash.length && timingSafeEqual(incomingHash, expectedHash);
   }
 
   private cookieOptions(expires?: Date) {
@@ -373,12 +315,7 @@ export class AuthService {
     };
   }
 
-  private setCookie(
-    response: Response,
-    name: 'access_token' | 'refresh_token',
-    value: string,
-    expires: Date,
-  ): void {
+  private setCookie(response: Response, name: 'access_token' | 'refresh_token', value: string, expires: Date): void {
     response.cookie(name, value, this.cookieOptions(expires));
   }
 

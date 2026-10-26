@@ -1,12 +1,6 @@
-import {
-  Logger,
-  OnApplicationBootstrap,
-  OnModuleDestroy,
-} from '@nestjs/common';
+import { Logger, OnApplicationBootstrap, OnModuleDestroy } from '@nestjs/common';
 
-export abstract class BaseScheduledService
-  implements OnApplicationBootstrap, OnModuleDestroy
-{
+export abstract class BaseScheduledService implements OnApplicationBootstrap, OnModuleDestroy {
   protected abstract readonly intervalMs: number;
   protected abstract readonly taskName: string;
   private readonly logger = new Logger(this.constructor.name);
@@ -36,9 +30,7 @@ export abstract class BaseScheduledService
 
   private async run(): Promise<void> {
     if (this.running) {
-      this.logger.warn(
-        `${this.taskName} skipped because it is already running`,
-      );
+      this.logger.warn(`${this.taskName} skipped because it is already running`);
       this.scheduleNextRun();
       return;
     }

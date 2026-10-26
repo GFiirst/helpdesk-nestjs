@@ -1,36 +1,14 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Req,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
-import {
-  ApiCookieAuth,
-  ApiCreatedResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-  ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
+import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { ApiCookieAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Response } from 'express';
-import {
-  AppAbility,
-  CheckPolicies,
-} from 'src/casl/decorators/check-policies.decorator';
+import { AppAbility, CheckPolicies } from 'src/casl/decorators/check-policies.decorator';
 import { Action } from 'src/casl/enums/casl-action';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { UsersService } from 'src/users/users.service';
 import { AuthService } from './auth.service';
 import { Public } from './decorators/is-public.decorator';
-import {
-  AuthenticatedUserDto,
-  LoginResponseDto,
-  RefreshResponseDto,
-} from './dto/auth-response.dto';
+import { AuthenticatedUserDto, LoginResponseDto, RefreshResponseDto } from './dto/auth-response.dto';
 import { LoginCredentialsDto } from './dto/login-credentials.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -61,11 +39,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Authenticate and create a session' })
   @ApiOkResponse({ type: LoginResponseDto })
   @ApiUnauthorizedResponse({ description: 'Invalid email or password' })
-  async login(
-    @Body() loginCredential: LoginCredentialsDto,
-    @Req() request: AuthRequest,
-    @Res({ passthrough: true }) response: Response,
-  ) {
+  async login(@Body() loginCredential: LoginCredentialsDto, @Req() request: AuthRequest, @Res({ passthrough: true }) response: Response) {
     return this.authService.login(loginCredential, request, response);
   }
 
@@ -76,10 +50,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Renew the access token' })
   @ApiOkResponse({ type: RefreshResponseDto })
   @ApiUnauthorizedResponse({ description: 'Invalid refresh token' })
-  async refreshToken(
-    @Req() request: AuthRequest,
-    @Res({ passthrough: true }) response: Response,
-  ) {
+  async refreshToken(@Req() request: AuthRequest, @Res({ passthrough: true }) response: Response) {
     return this.authService.refreshToken(request, response);
   }
 
@@ -88,10 +59,7 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 300_000 } })
   @ApiOperation({ summary: 'Revoke the current session' })
   @ApiOkResponse({ schema: { example: { success: true } } })
-  async logout(
-    @Req() request: AuthRequest,
-    @Res({ passthrough: true }) response: Response,
-  ) {
+  async logout(@Req() request: AuthRequest, @Res({ passthrough: true }) response: Response) {
     return this.authService.logout(request, response);
   }
 
@@ -110,8 +78,7 @@ export class AuthController {
   @ApiOkResponse({
     schema: {
       example: {
-        message:
-          'If an account exists for this email, password reset instructions will be sent.',
+        message: 'If an account exists for this email, password reset instructions will be sent.',
       },
     },
   })
@@ -119,8 +86,7 @@ export class AuthController {
     await this.authService.forgotPassword(dto);
 
     return {
-      message:
-        'If an account exists for this email, password reset instructions will be sent.',
+      message: 'If an account exists for this email, password reset instructions will be sent.',
     };
   }
 

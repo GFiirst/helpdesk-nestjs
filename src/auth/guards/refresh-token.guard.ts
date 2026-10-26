@@ -2,19 +2,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { TokenStatus } from '../enums/token-status';
 import { ConfigService } from '@nestjs/config';
 import { createHash, timingSafeEqual } from 'crypto';
-import {
-  AuthRequest,
-  RefreshTokenPayload,
-} from '../interfaces/auth-request.interface';
+import { AuthRequest, RefreshTokenPayload } from '../interfaces/auth-request.interface';
 
 @Injectable()
 export class RefreshTokenGuard implements CanActivate {
@@ -34,12 +26,9 @@ export class RefreshTokenGuard implements CanActivate {
     }
 
     try {
-      const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(
-        token,
-        {
-          secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
-        },
-      );
+      const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(token, {
+        secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
+      });
 
       const storedToken = await this.refreshTokenRepo.findOne({
         where: {
@@ -60,14 +49,9 @@ export class RefreshTokenGuard implements CanActivate {
         throw new UnauthorizedException('expired Refresh token');
       }
 
-      const incomingHash = Buffer.from(
-        createHash('sha256').update(token).digest('hex'),
-        'hex',
-      );
+      const incomingHash = Buffer.from(createHash('sha256').update(token).digest('hex'), 'hex');
       const storedHash = Buffer.from(storedToken.tokenHash, 'hex');
-      const isMatch =
-        incomingHash.length === storedHash.length &&
-        timingSafeEqual(incomingHash, storedHash);
+      const isMatch = incomingHash.length === storedHash.length && timingSafeEqual(incomingHash, storedHash);
 
       if (!isMatch) {
         throw new UnauthorizedException('Invalid refresh token');

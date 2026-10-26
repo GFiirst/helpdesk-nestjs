@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Credential } from '../auth/entities/credential.entity';
@@ -36,10 +31,7 @@ export class UsersService {
         throw new ConflictException('Email already exists');
       }
 
-      const hashedPassword = await bcrypt.hash(
-        dto.password,
-        this.configService.getOrThrow<number>('BCRYPT_SALT'),
-      );
+      const hashedPassword = await bcrypt.hash(dto.password, this.configService.getOrThrow<number>('BCRYPT_SALT'));
 
       const credential = manager.create(Credential, {
         email: dto.email.trim().toLowerCase(),

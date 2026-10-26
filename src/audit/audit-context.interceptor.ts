@@ -1,9 +1,4 @@
-import {
-  CallHandler,
-  ExecutionContext,
-  Injectable,
-  NestInterceptor,
-} from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { defer, Observable } from 'rxjs';
@@ -22,11 +17,7 @@ export class AuditContextInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest<AuthRequest>();
     const forwardedFor = request.headers['x-forwarded-for'];
     const ip =
-      (typeof forwardedFor === 'string'
-        ? forwardedFor.split(',')[0]?.trim()
-        : undefined) ??
-      request.socket.remoteAddress ??
-      undefined;
+      (typeof forwardedFor === 'string' ? forwardedFor.split(',')[0]?.trim() : undefined) ?? request.socket.remoteAddress ?? undefined;
     const store: AuditContext = {
       actorId: request.user?.id,
       ipHash: ip ? createHash('sha256').update(ip).digest('hex') : undefined,
