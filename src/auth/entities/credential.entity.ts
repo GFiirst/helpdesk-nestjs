@@ -1,23 +1,23 @@
-import { BaseEntity } from "src/database/base-entity";
-import { RefreshToken } from "src/auth/entities/refresh-token.entity";
-import { Column, Entity, Index,  OneToMany, OneToOne } from "typeorm";
-import { User } from "src/users/entity/user.entity";
+import { BaseEntity } from 'src/database/base-entity';
+import { RefreshToken } from 'src/auth/entities/refresh-token.entity';
+import { Column, Entity, Index, OneToMany, OneToOne } from 'typeorm';
+import { User } from 'src/users/entity/user.entity';
 
 @Entity()
 export class Credential extends BaseEntity {
-    @Index('credential_email_unique_active', ['email'], {
-        unique: true,
-        where: '"deletedAt" IS NULL',
-    })
-    @Column({ length: 255 })
-    email: string;
+  @Index('credential_email_unique_active', ['email'], {
+    unique: true,
+    where: '"deletedAt" IS NULL',
+  })
+  @Column({ length: 255 })
+  email: string;
 
-    @Column({ length: 255 })
-    password: string;
+  @Column({ length: 255 })
+  password: string;
 
-    @OneToOne(() => User, user => user.credential)
-    user: User;
+  @OneToOne(() => User, (user) => user.credential)
+  user: User;
 
-    @OneToMany(() => RefreshToken, (token) => token.credential)
-    refreshTokens: RefreshToken[];
+  @OneToMany(() => RefreshToken, (token) => token.credential)
+  refreshTokens: RefreshToken[];
 }
