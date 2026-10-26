@@ -24,6 +24,9 @@ export interface EnvironmentVariables {
   MAIL_SECURE: boolean;
   MAIL_USER: string;
   MAIL_PASS: string;
+  FILE_PATH: string;
+  FILE_MAX_BYTES: number;
+  FILE_ENCRYPTION_KEK: string;
 }
 
 const requiredVariables = [
@@ -161,5 +164,12 @@ export function validateEnvironment(
     MAIL_SECURE: parseBoolean(input.MAIL_SECURE, false),
     MAIL_USER: parseString(input.MAIL_USER),
     MAIL_PASS: parseString(input.MAIL_PASS),
+    FILE_PATH: parseString(input.FILE_PATH, 'uploads'),
+    FILE_MAX_BYTES: parsePositiveInteger(
+      input.FILE_MAX_BYTES,
+      10 * 1024 * 1024,
+      'FILE_MAX_BYTES',
+    ),
+    FILE_ENCRYPTION_KEK: parseString(input.FILE_ENCRYPTION_KEK),
   };
 }
