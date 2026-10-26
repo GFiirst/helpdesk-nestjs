@@ -12,18 +12,28 @@ import 'dotenv/config';
 import { entities } from './database/entities';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { BranchesModule } from './branches/branches.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { validateEnvironment } from './config/environment';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: process.env.DB_TYPE! as 'postgres',
-      host: process.env.DB_HOST,
-      port: +process.env.DB_PORT!,
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      entities: entities,
-      synchronize: false,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate: validateEnvironment,
+    }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'postgres',
+        host: config.getOrThrow<string>('DB_HOST'),
+        port: config.getOrThrow<number>('DB_PORT'),
+        username: config.getOrThrow<string>('DB_USERNAME'),
+        password: config.getOrThrow<string>('DB_PASSWORD'),
+        database: config.getOrThrow<string>('DB_NAME'),
+        entities,
+        synchronize: config.getOrThrow<boolean>('DB_SYNC'),
+      }),
     }),
     ThrottlerModule.forRoot([
       {
@@ -35,24 +45,28 @@ import { BranchesModule } from './branches/branches.module';
     CaslModule,
     UsersModule,
     BranchesModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET,
-      global: true
-    })
+    HealthModule,
+    JwtModule.registerAsync({
+      global: true,
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        secret: config.getOrThrow<string>('JWT_SECRET'),
+      }),
+    }),
   ],
   controllers: [],
   providers: [
     {
       provide: APP_GUARD,
-      useClass: AuthGuard
+      useClass: AuthGuard,
     },
     {
       provide: APP_GUARD,
-      useClass: PoliciesGuard
+      useClass: PoliciesGuard,
     },
     {
       provide: AsyncLocalStorage,
-      useValue: new AsyncLocalStorage()
+      useValue: new AsyncLocalStorage(),
     },
     {
       provide: APP_GUARD,

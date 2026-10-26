@@ -1,33 +1,58 @@
-  import { NestFactory } from '@nestjs/core';
-  import { AppModule } from './app.module';
-  import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-  import { ValidationPipe } from '@nestjs/common';
-  import cookieParser from 'cookie-parser';
-  import 'dotenv/config';
+import { Logger, ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
+import { Express } from 'express';
+import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
+async function bootstrap() {
+  const logger = new Logger('Bootstrap');
+  const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+  app.enableCors({
+    origin: configService
+      .getOrThrow<string>('ORIGIN')
+      .split(',')
+      .map((origin) => origin.trim()),
+    credentials: true,
+  });
 
-  async function bootstrap() {
-    const app = await NestFactory.create(AppModule);
-    app.enableCors({
-      origin: process.env.ORIGIN!,
-      credentials: true
+  if (configService.getOrThrow<string>('NODE_ENV') === 'development') {
+    const config = new DocumentBuilder()
+      .setTitle('Helpdesk API')
+      .setDescription(
+        'Authentication, users, branches, roles, and permissions API',
+      )
+      .setVersion('1.0')
+      .addCookieAuth('access_token', {
+        type: 'apiKey',
+        in: 'cookie',
+      })
+      .build();
+
+    const documentFactory = () => SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('docs', app, documentFactory, {
+      customSiteTitle: 'Helpdesk API documentation',
     });
-
-    if(process.env.ENV === 'dev'){
-      const config = new DocumentBuilder()
-        .setTitle('Helpdesk API')
-        .setDescription('Helpdesk API documentation')
-        .setVersion('1.0')
-        .addBearerAuth()
-        .build();
-
-      const documentFactory = () => SwaggerModule.createDocument(app, config);
-      SwaggerModule.setup('docs', app, documentFactory);
-    }
-
-    app.getHttpAdapter().getInstance().set('trust proxy', true);
-    app.use(cookieParser());
-    app.useGlobalPipes(new ValidationPipe());
-    await app.listen(process.env.PORT ?? 3000);
   }
-  bootstrap();
+
+  const expressApp = app.getHttpAdapter().getInstance() as Express;
+  expressApp.set('trust proxy', 1);
+  app.use(cookieParser());
+  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
+
+  const port = configService.getOrThrow<number>('PORT');
+  await app.listen(port);
+  logger.log(`Helpdesk API listening on port ${port}`);
+}
+
+void bootstrap();
