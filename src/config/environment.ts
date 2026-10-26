@@ -27,6 +27,7 @@ export interface EnvironmentVariables {
   FILE_PATH: string;
   FILE_MAX_BYTES: number;
   FILE_ENCRYPTION_KEK: string;
+  APPLY_MIGRATIONS_ON_STARTUP: boolean;
 }
 
 const requiredVariables = [
@@ -171,5 +172,9 @@ export function validateEnvironment(
       'FILE_MAX_BYTES',
     ),
     FILE_ENCRYPTION_KEK: parseString(input.FILE_ENCRYPTION_KEK),
+    APPLY_MIGRATIONS_ON_STARTUP: parseBoolean(
+      input.APPLY_MIGRATIONS_ON_STARTUP,
+      false,
+    ),
   };
 }

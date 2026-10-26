@@ -1,0 +1,104 @@
+Enum token_status {
+  active
+  revoked
+}
+
+Enum audit_action {
+  create
+  update
+  delete
+}
+
+Table credential {
+  id uuid [pk]
+  email varchar(255) [not null]
+  password varchar(255) [not null]
+  createdAt timestamptz [not null]
+  updatedAt timestamptz [not null]
+  deletedAt timestamptz
+}
+
+Table user {
+  id uuid [pk]
+  credentialId uuid [unique, ref: > credential.id]
+  profileId uuid [unique, ref: > profile.id]
+  createdAt timestamptz [not null]
+  updatedAt timestamptz [not null]
+  deletedAt timestamptz
+}
+
+Table profile {
+  id uuid [pk]
+  name varchar [not null]
+  phone varchar
+  department varchar
+  remoteAccess varchar
+  isAvailable boolean [not null, default: true]
+  createdAt timestamptz [not null]
+  updatedAt timestamptz [not null]
+  deletedAt timestamptz
+}
+
+Table refresh_token {
+  id uuid [pk]
+  token varchar(64) [not null, unique, note: 'SHA-256 hash']
+  expiresAt timestamptz [not null]
+  status token_status [not null, default: 'active']
+  userAgent varchar
+  device varchar
+  ip varchar
+  credentialId uuid [ref: > credential.id]
+  createdAt timestamptz [not null]
+  updatedAt timestamptz [not null]
+  deletedAt timestamptz
+}
+
+Table roles {
+  id uuid [pk]
+  role varchar [not null]
+}
+
+Table permissions {
+  id uuid [pk]
+  action varchar [not null]
+  subject varchar [not null]
+}
+
+Table branches {
+  id uuid [pk]
+  name varchar(200) [not null, unique]
+}
+
+Table user_roles_roles {
+  userId uuid [ref: > user.id]
+  rolesId uuid [ref: > roles.id]
+  indexes { (userId, rolesId) [pk] }
+}
+
+Table roles_permissions_permissions {
+  rolesId uuid [ref: > roles.id]
+  permissionsId uuid [ref: > permissions.id]
+  indexes { (rolesId, permissionsId) [pk] }
+}
+
+Table branches_users_user {
+  branchesId uuid [ref: > branches.id]
+  userId uuid [ref: > user.id]
+  indexes { (branchesId, userId) [pk] }
+}
+
+Table audit_log {
+  id uuid [pk]
+  action audit_action [not null]
+  entityName varchar(120) [not null]
+  entityId varchar(255)
+  actorId uuid
+  ipHash varchar(64)
+  changes jsonb
+  createdAt timestamptz [not null]
+
+  indexes {
+    (entityName, entityId)
+    actorId
+  }
+}

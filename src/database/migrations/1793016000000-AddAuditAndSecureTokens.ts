@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddAuditAndSecureTokens20261026000000 implements MigrationInterface {
-  name = 'AddAuditAndSecureTokens20261026000000';
+export class AddAuditAndSecureTokens1793016000000 implements MigrationInterface {
+  name = 'AddAuditAndSecureTokens1793016000000';
 
   async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(

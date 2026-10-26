@@ -20,13 +20,13 @@ export class AuditLog {
   @Column({ length: 120 })
   entityName: string;
 
-  @Column({ nullable: true, length: 255 })
+  @Column({ type: 'varchar', nullable: true, length: 255 })
   entityId: string | null;
 
   @Column({ type: 'uuid', nullable: true })
   actorId: string | null;
 
-  @Column({ length: 64, nullable: true })
+  @Column({ type: 'varchar', length: 64, nullable: true })
   ipHash: string | null;
 
   @Column({ type: 'jsonb', nullable: true })

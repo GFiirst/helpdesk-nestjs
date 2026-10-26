@@ -1,99 +1,223 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Helpdesk NestJS API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Backend foundation for a helpdesk platform, built with NestJS 11, TypeORM, and PostgreSQL. It provides cookie-based authentication, refresh-token sessions, role and permission checks, branches, password recovery, database auditing, encrypted file storage utilities, health checks, and versioned technical documentation.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+> Current scope: authentication and branch endpoints are available. Roles, permissions, audit logs, scheduling, pagination, and encrypted file storage are reusable infrastructure and do not expose dedicated public endpoints yet.
 
-## Description
+## Features
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- JWT access and refresh tokens delivered only through HttpOnly cookies.
+- Configurable token expiration and a five-session default limit.
+- Refresh tokens stored as SHA-256 hashes and compared in constant time.
+- Password recovery by email with single-use reset tokens.
+- BCrypt password hashing and normalized email addresses.
+- CASL-based role and permission checks.
+- Automatic, sanitized audit logs for database mutations.
+- Client IPs stored in audit logs only as SHA-256 hashes.
+- AES-256-GCM envelope encryption for stored files.
+- File validation by size, extension, MIME type, and byte signature.
+- Global validation, error responses, rate limiting, CORS, Swagger, and database-aware health checks.
+- Validated environment configuration and versioned TypeORM migrations.
+- Unit tests, Docker assets, CI workflow, OpenAPI contract, and DBML schema.
 
-## Project setup
+## Technology
 
-```bash
-$ npm install
-```
+- Node.js 22 and NestJS 11
+- TypeScript, TypeORM, and PostgreSQL
+- JWT, BCrypt, CASL, Nodemailer, and Node.js Crypto
+- Jest, Supertest, Swagger/OpenAPI, Docker, and GitHub Actions
 
-## Compile and run the project
+## Authentication model
 
-```bash
-# development
-$ npm run start
+| Cookie          | Purpose                          | Default lifetime |
+| --------------- | -------------------------------- | ---------------: |
+| `access_token`  | Authenticates protected requests |       15 minutes |
+| `refresh_token` | Renews the access token          |          30 days |
 
-# watch mode
-$ npm run start:dev
+Both cookies use `HttpOnly`, `SameSite=Strict`, and `Path=/`. Set `COOKIE_SECURE=true` in production. Browser clients must include credentials, for example `credentials: "include"` with `fetch`.
 
-# production mode
-$ npm run start:prod
-```
+Tokens are not returned in response bodies. A successful login returns only the access-token expiration and basic user information.
 
-## Run tests
+## Requirements
 
-```bash
-# unit tests
-$ npm run test
+- Node.js 22+
+- npm 10+
+- PostgreSQL 16+
+- Docker with Compose for the container workflow
 
-# e2e tests
-$ npm run test:e2e
+## Local configuration
 
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Copy the example file and replace all placeholder secrets:
 
 ```bash
-$ npm install -g mau
-$ mau deploy
+cp .env.example .env
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Important settings:
 
-## Resources
+```env
+NODE_ENV=development
+PORT=4321
 
-Check out a few resources that may come in handy when working with NestJS:
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=change-me
+DB_NAME=helpdesk
+DB_SYNC=false
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+JWT_SECRET=use-a-long-random-access-secret
+JWT_REFRESH_SECRET=use-a-different-long-random-refresh-secret
+JWT_RESET_SECRET=use-a-different-long-random-reset-secret
+JWT_ACCESS_EXPIRATION_MINUTES=15
+JWT_REFRESH_EXPIRATION_DAYS=30
+JWT_RESET_EXPIRATION_MINUTES=15
 
-## Support
+ORIGIN=http://localhost:3000
+COOKIE_SECURE=false
+FRONTEND_URL=http://localhost:3000
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_SECURE=false
+MAIL_USER=
+MAIL_PASS=
 
-## Stay in touch
+FILE_PATH=uploads
+FILE_MAX_BYTES=10485760
+FILE_ENCRYPTION_KEK=
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Generate the 32-byte file key encryption key with:
 
-## License
+```bash
+openssl rand -base64 32
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Do not rotate `FILE_ENCRYPTION_KEK` without re-encrypting existing files. In production, all JWT secrets must contain at least 32 characters and the reset secret must differ from the access and refresh secrets.
+
+## Install and run
+
+```bash
+npm ci
+npm run build
+npm run typeorm:run
+npm run generate:roles
+npm run generate:branches
+npm run permissions:sync
+npm run generate:users
+npm run start:dev
+```
+
+The API listens on `http://localhost:4321` by default.
+
+- Swagger UI: `/docs` in development
+- Health check: `/health`
+
+The seed scripts are intentionally separate so operators can control when startup data changes. Run branches and roles before the admin-user seed.
+
+## Database migrations
+
+Create a migration after changing entities:
+
+```bash
+npm run migration:generate -- src/database/migrations/DescribeChange
+```
+
+Apply committed migrations:
+
+```bash
+npm run typeorm:run
+```
+
+`DB_SYNC` should remain `false` outside disposable local databases.
+
+## API endpoints
+
+| Method | Route                   | Authentication                     | Description                                  |
+| ------ | ----------------------- | ---------------------------------- | -------------------------------------------- |
+| `POST` | `/auth/sign-up`         | `user.create` permission           | Create a user                                |
+| `POST` | `/auth/login`           | Public                             | Authenticate and create a session            |
+| `POST` | `/auth/refresh`         | Refresh cookie                     | Renew the access token                       |
+| `POST` | `/auth/logout`          | Public                             | Revoke the current session and clear cookies |
+| `GET`  | `/auth/validate`        | Access cookie                      | Return the authenticated user                |
+| `POST` | `/auth/forgot-password` | Public                             | Request password recovery                    |
+| `POST` | `/auth/reset-password`  | Public                             | Reset a password and revoke active sessions  |
+| `POST` | `/branches/create`      | Manage permission and admin branch | Create a branch                              |
+| `GET`  | `/branches`             | Public                             | List non-administrative branches             |
+| `GET`  | `/branches/all`         | Manage permission and admin branch | List every branch                            |
+| `GET`  | `/health`               | Public                             | Check API and database availability          |
+
+Public authentication routes are limited to five requests per five minutes. The global limiter allows five requests per minute by default.
+
+### Login example
+
+```bash
+curl -c cookies.txt \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"admin@example.com","password":"strong-password"}' \
+  http://localhost:4321/auth/login
+
+curl -b cookies.txt http://localhost:4321/auth/validate
+
+curl -b cookies.txt -c cookies.txt -X POST \
+  http://localhost:4321/auth/refresh
+```
+
+### Password recovery
+
+`POST /auth/forgot-password` uses a generic success response when email delivery is available, whether or not the account exists. The reset token is tied to the current password hash; after one successful use, the same token no longer works. Resetting a password revokes all active refresh tokens.
+
+## Roles and permissions
+
+The seed scripts create `admin`, `manager`, `agent`, and `user` roles. CASL policies are declared in `src/permissions/permissions.map.ts`. The `manage.manage` permission bypasses endpoint-specific checks.
+
+All new endpoints are protected by default. Apply `@Public()` only when anonymous access is intentional, and use `@CheckPolicies(...)` for authorization rules.
+
+## Auditing
+
+TypeORM inserts, updates, and deletes are written to `audit_log`. Passwords, tokens, secrets, authorization data, cookies, credentials, hashes, encrypted values, and keys are recursively redacted. Cyclic structures are handled safely. Request IP addresses are hashed before persistence.
+
+Apply the migrations before enabling writes after upgrading to this version.
+
+## Encrypted file storage
+
+`FileStorageService` and `FileValidatorService` are exported by `UploadModule`. Supported formats are PDF, PNG, JPG/JPEG, GIF, WebP, DOCX, XLSX, and TXT.
+
+Each file receives a random data encryption key. File data and that key are authenticated with AES-256-GCM; the data key is encrypted by `FILE_ENCRYPTION_KEK`. Stored filenames are random UUIDs and files are created with restrictive permissions.
+
+No upload controller is included. A feature that exposes uploads must add authorization, ownership checks, content-disposition handling, and request-level Multer limits.
+
+## Tests
+
+```bash
+npm test
+npm run test:cov
+npm run test:e2e
+```
+
+The unit suite covers configuration validation, audit sanitization, file signatures, and authenticated encryption. See [TESTS.md](TESTS.md) for test architecture and troubleshooting.
+
+## Docker
+
+```bash
+docker compose up --build
+docker compose down
+```
+
+Compose exposes the API on port `4321` and PostgreSQL on host port `5433`. See [DOCKER.md](DOCKER.md) for configuration and operational notes.
+
+## Technical documentation
+
+- [OpenAPI contract](docs/openapi.yaml)
+- [Database diagram](docs/helpdesk.dbml)
+- [Testing guide](TESTS.md)
+- [Docker guide](DOCKER.md)
+
+## Security notes
+
+- Keep `.env`, SMTP credentials, JWT secrets, and encryption keys outside version control.
+- Use HTTPS and `COOKIE_SECURE=true` in production.
+- Restrict trusted proxies at the infrastructure layer; the application trusts one proxy hop.
+- Review `npm audit` findings in the context of production dependency paths before deployment.
+- Back up the database and file KEK together; losing the KEK makes encrypted files unrecoverable.

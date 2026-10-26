@@ -7,7 +7,6 @@ import { AuthModule } from './auth/auth.module';
 import { CaslModule } from './casl/casl.module';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from './users/users.module';
-import { AsyncLocalStorage } from 'async_hooks';
 import 'dotenv/config';
 import { entities } from './database/entities';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -35,6 +34,10 @@ import { UploadModule } from './upload/upload.module';
         database: config.getOrThrow<string>('DB_NAME'),
         entities,
         synchronize: config.getOrThrow<boolean>('DB_SYNC'),
+        migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
+        migrationsRun: config.getOrThrow<boolean>(
+          'APPLY_MIGRATIONS_ON_STARTUP',
+        ),
       }),
     }),
     ThrottlerModule.forRoot([
@@ -67,10 +70,6 @@ import { UploadModule } from './upload/upload.module';
     {
       provide: APP_GUARD,
       useClass: PoliciesGuard,
-    },
-    {
-      provide: AsyncLocalStorage,
-      useValue: new AsyncLocalStorage(),
     },
     {
       provide: APP_GUARD,
