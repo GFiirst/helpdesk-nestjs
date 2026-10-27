@@ -32,6 +32,12 @@ export interface EnvironmentVariables {
   LOG_PATH: string;
   LOG_RETENTION_DAYS: number;
   LOG_FILE_ENABLED: boolean;
+  OTEL_ENABLED: boolean;
+  OTEL_SERVICE_NAME: string;
+  OTEL_SERVICE_VERSION: string;
+  OTEL_EXPORTER_OTLP_ENDPOINT: string;
+  OTEL_EXPORTER_OTLP_PROTOCOL: 'grpc' | 'http/protobuf';
+  OTEL_METRIC_EXPORT_INTERVAL_MS: number;
   APPLY_MIGRATIONS_ON_STARTUP: boolean;
 }
 
@@ -100,6 +106,13 @@ export function validateEnvironment(input: Record<string, unknown>): Environment
     throw new Error('JWT_SECRET and JWT_REFRESH_SECRET must be different');
   }
 
+  const otlpProtocol = parseString(input.OTEL_EXPORTER_OTLP_PROTOCOL, 'grpc');
+  if (otlpProtocol !== 'grpc' && otlpProtocol !== 'http/protobuf') {
+    throw new Error('OTEL_EXPORTER_OTLP_PROTOCOL must be grpc or http/protobuf');
+  }
+
+  const defaultOtlpEndpoint = otlpProtocol === 'grpc' ? 'http://localhost:4317' : 'http://localhost:4318';
+
   if (normalizedEnvironment === 'production') {
     if (jwtSecret.length < 32 || jwtRefreshSecret.length < 32 || jwtResetSecret.length < 32) {
       throw new Error('JWT secrets must contain at least 32 characters in production');
@@ -145,6 +158,12 @@ export function validateEnvironment(input: Record<string, unknown>): Environment
     LOG_PATH: parseString(input.LOG_PATH, 'logs'),
     LOG_RETENTION_DAYS: parsePositiveInteger(input.LOG_RETENTION_DAYS, 15, 'LOG_RETENTION_DAYS'),
     LOG_FILE_ENABLED: parseBoolean(input.LOG_FILE_ENABLED, normalizedEnvironment !== 'test'),
+    OTEL_ENABLED: parseBoolean(input.OTEL_ENABLED, false),
+    OTEL_SERVICE_NAME: parseString(input.OTEL_SERVICE_NAME, 'helpdesk-nestjs'),
+    OTEL_SERVICE_VERSION: parseString(input.OTEL_SERVICE_VERSION, '0.0.1'),
+    OTEL_EXPORTER_OTLP_ENDPOINT: parseString(input.OTEL_EXPORTER_OTLP_ENDPOINT, defaultOtlpEndpoint).replace(/\/$/, ''),
+    OTEL_EXPORTER_OTLP_PROTOCOL: otlpProtocol,
+    OTEL_METRIC_EXPORT_INTERVAL_MS: parsePositiveInteger(input.OTEL_METRIC_EXPORT_INTERVAL_MS, 10000, 'OTEL_METRIC_EXPORT_INTERVAL_MS'),
     APPLY_MIGRATIONS_ON_STARTUP: parseBoolean(input.APPLY_MIGRATIONS_ON_STARTUP, false),
   };
 }

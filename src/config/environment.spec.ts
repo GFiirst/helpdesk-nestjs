@@ -30,6 +30,11 @@ describe('validateEnvironment', () => {
       LOG_PATH: 'logs',
       LOG_RETENTION_DAYS: 15,
       LOG_FILE_ENABLED: true,
+      OTEL_ENABLED: false,
+      OTEL_SERVICE_NAME: 'helpdesk-nestjs',
+      OTEL_SERVICE_VERSION: '0.0.1',
+      OTEL_EXPORTER_OTLP_ENDPOINT: 'http://localhost:4317',
+      OTEL_EXPORTER_OTLP_PROTOCOL: 'grpc',
     });
   });
 
@@ -58,5 +63,14 @@ describe('validateEnvironment', () => {
         FIELD_ENCRYPTION_KEY: 'invalid',
       }),
     ).toThrow('FIELD_ENCRYPTION_KEY must contain exactly 32 Base64-encoded bytes');
+  });
+
+  it('rejects an unsupported OTLP protocol', () => {
+    expect(() =>
+      validateEnvironment({
+        ...validEnvironment,
+        OTEL_EXPORTER_OTLP_PROTOCOL: 'json',
+      }),
+    ).toThrow('OTEL_EXPORTER_OTLP_PROTOCOL must be grpc or http/protobuf');
   });
 });

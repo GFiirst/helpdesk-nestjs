@@ -18,14 +18,15 @@ Backend foundation for a helpdesk platform, built with NestJS 11, TypeORM, and P
 - File validation by size, extension, MIME type, and byte signature.
 - Global validation, error responses, rate limiting, CORS, Swagger, and database-aware health checks.
 - Structured Pino request and application logs with daily file rotation, retention, redaction, and request IDs.
+- Optional OpenTelemetry export for structured logs, traces, and metrics over OTLP.
 - Validated environment configuration and versioned TypeORM migrations.
 - Unit tests, Docker assets, CI workflow, OpenAPI contract, and DBML schema.
 
 ## Technology
 
-- Node.js 22 and NestJS 11
+- Node.js 22.15+ and NestJS 11
 - TypeScript, TypeORM, and PostgreSQL
-- JWT, BCrypt, CASL, Nodemailer, Pino, and Node.js Crypto
+- JWT, BCrypt, CASL, Nodemailer, Pino, OpenTelemetry, and Node.js Crypto
 - Jest, Supertest, Swagger/OpenAPI, Docker, and GitHub Actions
 
 ## Authentication model
@@ -64,6 +65,13 @@ LOG_LEVEL=debug
 LOG_PATH=logs
 LOG_RETENTION_DAYS=15
 LOG_FILE_ENABLED=true
+
+OTEL_ENABLED=false
+OTEL_SERVICE_NAME=helpdesk-nestjs
+OTEL_SERVICE_VERSION=0.0.1
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+OTEL_METRIC_EXPORT_INTERVAL_MS=10000
 
 DB_HOST=localhost
 DB_PORT=5432
@@ -193,6 +201,14 @@ Apply the migrations before enabling writes after upgrading to this version.
 Pino replaces the default NestJS logger and writes structured JSON to stdout. When `LOG_FILE_ENABLED=true`, the same events are written under `LOG_PATH` with daily rotation and the configured retention period. HTTP requests receive an `x-request-id`; `/health` is excluded from automatic request logs to reduce noise.
 
 Authorization headers, cookies, passwords, tokens, plaintext request emails, encrypted emails, and email hashes are redacted when those properties are present in a log record. Application code must still avoid logging whole DTOs or other personal data.
+
+## OpenTelemetry
+
+Set `OTEL_ENABLED=true` to send Pino logs, traces, and metrics to any OTLP-compatible collector or backend. The instrumentation covers inbound and outbound HTTP, NestJS, PostgreSQL, and the Node.js runtime. `/health` is omitted from traces to reduce noise, and request-scoped Pino events include `trace_id` and `span_id` for correlation.
+
+Both `grpc` and `http/protobuf` are accepted through `OTEL_EXPORTER_OTLP_PROTOCOL`. Use port `4317` for gRPC or `4318` for HTTP/protobuf unless your collector specifies another endpoint. Standard `OTEL_EXPORTER_OTLP_HEADERS` can be used when the remote backend requires authentication.
+
+No Grafana, collector, or telemetry backend is embedded in this repository. Point `OTEL_EXPORTER_OTLP_ENDPOINT` to your existing OpenTelemetry Collector, Grafana Alloy, Grafana Cloud, or another compatible service.
 
 ## Sensitive database fields
 

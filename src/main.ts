@@ -1,3 +1,4 @@
+import { shutdownTelemetry } from './common/observability/instrumentation';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
@@ -52,6 +53,17 @@ async function bootstrap() {
   const port = configService.getOrThrow<number>('PORT');
   await app.listen(port);
   app.get(Logger).log(`Helpdesk API listening on port ${port}`, 'Bootstrap');
+
+  let shuttingDown = false;
+  const shutdown = async () => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    await app.close();
+    await shutdownTelemetry();
+  };
+
+  process.once('SIGTERM', () => void shutdown());
+  process.once('SIGINT', () => void shutdown());
 }
 
 void bootstrap();

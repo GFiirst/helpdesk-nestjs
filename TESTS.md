@@ -20,6 +20,7 @@ Tests under `src/**/*.spec.ts` currently verify:
 - allowed file signatures and spoofed-content rejection;
 - AES-256-GCM encryption round trips and tamper detection.
 - randomized field encryption and stable normalized email hashes.
+- validated OpenTelemetry defaults and accepted OTLP protocols.
 
 Unit tests do not require PostgreSQL or SMTP.
 
