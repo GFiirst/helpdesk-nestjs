@@ -52,7 +52,10 @@ const redactedPaths = [
                   frequency: 'daily',
                   dateFormat: 'yyyy-MM-dd',
                   mkdir: true,
-                  limit: { count: Math.max(retentionDays - 1, 1) },
+                  limit: {
+                    count: retentionDays,
+                    removeOtherLogFiles: true,
+                  },
                 },
               },
             ],
