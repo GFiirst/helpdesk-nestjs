@@ -1,9 +1,10 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import nodemailer, { Transporter } from 'nodemailer';
 
 @Injectable()
 export class EmailService {
+  private readonly logger = new Logger(EmailService.name);
   private readonly transporter?: Transporter;
 
   constructor(private readonly configService: ConfigService) {
@@ -22,6 +23,7 @@ export class EmailService {
 
   async sendPasswordReset(recipient: string, resetUrl: string): Promise<void> {
     this.ensureAvailable();
+    this.logger.log('Password reset email delivery started');
 
     try {
       await this.transporter!.sendMail({
@@ -35,22 +37,22 @@ export class EmailService {
           '<p>If you did not request this change, ignore this email.</p>',
         ].join(''),
       });
-    } catch {
+      this.logger.log('Password reset email delivery succeeded');
+    } catch (error) {
+      const stack = error instanceof Error ? error.stack : undefined;
+      this.logger.error('Password reset email delivery failed', stack);
       throw new ServiceUnavailableException('Email delivery failed');
     }
   }
 
   ensureAvailable(): void {
     if (!this.transporter) {
+      this.logger.warn('Email delivery is not configured');
       throw new ServiceUnavailableException('Email delivery is not configured');
     }
   }
 
   private escapeHtml(value: string): string {
-    return value
-      .replaceAll('&', '&amp;')
-      .replaceAll('"', '&quot;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;');
+    return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
   }
 }

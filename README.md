@@ -200,6 +200,8 @@ Apply the migrations before enabling writes after upgrading to this version.
 
 Pino replaces the default NestJS logger while using the same readable output convention as the base ASP.NET application: `[timestamp level] [trace/span] context message`. When `LOG_FILE_ENABLED=true`, events are written as text under `LOG_PATH` in daily `log.<date>.<number>.txt` files. At most `LOG_RETENTION_DAYS` matching files are retained, including files created before an application restart. Informational NestJS bootstrap events are suppressed, exception stacks are written below their messages, HTTP requests receive an `x-request-id`, and `/health` is excluded from automatic request logs.
 
+Authentication, user, branch, email, encrypted-file, and scheduled-service operations log their relevant start, success, warning, and failure events. These messages use internal identifiers only when needed for diagnostics and never include email addresses, passwords, cookies, or tokens.
+
 Authorization headers, cookies, passwords, tokens, plaintext request emails, encrypted emails, and email hashes are redacted when those properties are present in a log record. Application code must still avoid logging whole DTOs or other personal data.
 
 ## OpenTelemetry

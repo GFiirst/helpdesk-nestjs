@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Credential } from '../auth/entities/credential.entity';
@@ -13,6 +13,8 @@ import { FieldEncryptionService } from 'src/security/field-encryption.service';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     @InjectRepository(Credential)
     private credentialRepository: Repository<Credential>,
@@ -24,7 +26,8 @@ export class UsersService {
   ) {}
 
   async createUser(dto: CreateUserDto) {
-    return await this.dataSource.transaction(async (manager) => {
+    this.logger.log('User creation started');
+    const result = await this.dataSource.transaction(async (manager) => {
       const normalizedEmail = this.fieldEncryptionService.normalizeEmail(dto.email);
       const emailHash = this.fieldEncryptionService.hashEmail(normalizedEmail);
       const existingEmail = await manager.findOne(Credential, {
@@ -32,6 +35,7 @@ export class UsersService {
       });
 
       if (existingEmail) {
+        this.logger.warn('User creation failed: Email already exists');
         throw new ConflictException('Email already exists');
       }
 
@@ -50,6 +54,7 @@ export class UsersService {
       });
 
       if (!role) {
+        this.logger.error('User creation failed: Default role not found');
         throw new NotFoundException('Default role not found');
       }
 
@@ -58,6 +63,7 @@ export class UsersService {
       });
 
       if (branches.length !== dto.branches.length) {
+        this.logger.warn('User creation failed: One or more branches are invalid');
         throw new BadRequestException('One or more branches are invalid.');
       }
 
@@ -71,6 +77,8 @@ export class UsersService {
 
       return { message: 'User created successfully' };
     });
+    this.logger.log('User creation succeeded');
+    return result;
   }
 
   async findByIdWithRolesAndPermissions(id: string) {

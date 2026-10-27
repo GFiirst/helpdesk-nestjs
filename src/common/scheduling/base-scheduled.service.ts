@@ -8,6 +8,7 @@ export abstract class BaseScheduledService implements OnApplicationBootstrap, On
   private running = false;
 
   onApplicationBootstrap(): void {
+    this.logger.log(`${this.taskName} scheduled service started`);
     this.scheduleNextRun();
   }
 
@@ -15,6 +16,7 @@ export abstract class BaseScheduledService implements OnApplicationBootstrap, On
     if (this.timer) {
       clearTimeout(this.timer);
     }
+    this.logger.log(`${this.taskName} scheduled service stopped`);
   }
 
   protected abstract execute(): Promise<void>;
@@ -26,6 +28,7 @@ export abstract class BaseScheduledService implements OnApplicationBootstrap, On
 
     this.timer = setTimeout(() => void this.run(), this.intervalMs);
     this.timer.unref();
+    this.logger.log(`${this.taskName} next execution scheduled in ${this.intervalMs}ms`);
   }
 
   private async run(): Promise<void> {
@@ -38,6 +41,7 @@ export abstract class BaseScheduledService implements OnApplicationBootstrap, On
     this.running = true;
     try {
       await this.execute();
+      this.logger.log(`${this.taskName} completed successfully`);
     } catch (error) {
       const stack = error instanceof Error ? error.stack : undefined;
       this.logger.error(`${this.taskName} failed`, stack);

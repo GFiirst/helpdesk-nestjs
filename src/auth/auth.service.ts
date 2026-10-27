@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -18,6 +18,8 @@ import { FieldEncryptionService } from '../security/field-encryption.service';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     @InjectRepository(Credential)
     private credentialRepository: Repository<Credential>,
@@ -30,6 +32,7 @@ export class AuthService {
   ) {}
 
   async login(loginCredential: LoginCredentialsDto, req: AuthRequest, res: Response) {
+    this.logger.log('Authentication started');
     const existingRefreshToken = req.cookies?.refresh_token;
 
     if (existingRefreshToken) {
@@ -48,9 +51,11 @@ export class AuthService {
           storedToken.status = TokenStatus.REVOKED;
 
           await this.refreshTokenRepository.save(storedToken);
+          this.logger.log('Existing refresh token revoked');
         }
       } catch {
         // Invalid or expired cookies are replaced by the new session.
+        this.logger.warn('Invalid refresh token during login');
       }
 
       this.clearAuthCookies(res);
@@ -63,12 +68,14 @@ export class AuthService {
     });
 
     if (!existingCredential) {
+      this.logger.warn('Authentication failed: User not found');
       throw new UnauthorizedException('Invalid email or password');
     }
 
     const validPass = await bcrypt.compare(loginCredential.password, existingCredential.password);
 
     if (!validPass) {
+      this.logger.warn('Authentication failed: Invalid password');
       throw new UnauthorizedException('Invalid email or password');
     }
 
@@ -90,6 +97,7 @@ export class AuthService {
       const oldestSession = activeSessions[0];
       oldestSession.status = TokenStatus.REVOKED;
       await this.refreshTokenRepository.save(oldestSession);
+      this.logger.log('Oldest session revoked due to max session limit');
     }
 
     const payload = {
@@ -133,6 +141,7 @@ export class AuthService {
 
     this.setCookie(res, 'access_token', accessToken, accessExpiresAt);
     this.setCookie(res, 'refresh_token', refreshToken, refreshExpiresAt);
+    this.logger.log('Authentication succeeded');
 
     return {
       expiresAt: accessExpiresAt,
@@ -141,9 +150,11 @@ export class AuthService {
   }
 
   async refreshToken(req: AuthRequest, res: Response) {
+    this.logger.log('Token refresh started');
     const credential = req.credential;
 
     if (!credential) {
+      this.logger.warn('Token refresh failed: Credential not found');
       throw new UnauthorizedException('Refresh token is invalid');
     }
 
@@ -159,6 +170,7 @@ export class AuthService {
     });
 
     this.setCookie(res, 'access_token', accessToken, expiresAt);
+    this.logger.log('Token refresh succeeded');
 
     return {
       expiresAt,
@@ -166,6 +178,7 @@ export class AuthService {
   }
 
   async logout(req: AuthRequest, res: Response) {
+    this.logger.log('Logout started');
     const refreshToken = req.cookies?.refresh_token;
 
     if (refreshToken) {
@@ -184,13 +197,17 @@ export class AuthService {
           storedToken.status = TokenStatus.REVOKED;
 
           await this.refreshTokenRepository.save(storedToken);
+          this.logger.log('Refresh token revoked during logout');
         }
-      } catch {
+      } catch (error) {
         // Logout remains idempotent when the cookie is invalid or expired.
+        const stack = error instanceof Error ? error.stack : undefined;
+        this.logger.error('Error validating refresh token during logout', stack);
       }
     }
 
     this.clearAuthCookies(res);
+    this.logger.log('Logout succeeded');
 
     return {
       success: true,
@@ -198,6 +215,7 @@ export class AuthService {
   }
 
   async forgotPassword(dto: ForgotPasswordDto): Promise<void> {
+    this.logger.log('Forgot password request started');
     this.emailService.ensureAvailable();
 
     const normalizedEmail = this.fieldEncryptionService.normalizeEmail(dto.email);
@@ -207,6 +225,7 @@ export class AuthService {
     });
 
     if (!credential) {
+      this.logger.log('Forgot password request finished for an unknown account');
       return;
     }
 
@@ -226,9 +245,12 @@ export class AuthService {
     const resetUrl = `${frontendUrl}/reset-password?token=${encodeURIComponent(token)}`;
 
     await this.emailService.sendPasswordReset(this.fieldEncryptionService.decrypt(credential.emailEncrypted), resetUrl);
+    this.logger.log(`Password reset email sent for user: ${credential.user.id}`);
+    this.logger.log(`Forgot password request finished for user: ${credential.user.id}`);
   }
 
   async resetPassword(dto: ResetPasswordDto): Promise<void> {
+    this.logger.log('Password reset request started');
     let payload: PasswordResetPayload;
 
     try {
@@ -236,10 +258,12 @@ export class AuthService {
         secret: this.configService.getOrThrow<string>('JWT_RESET_SECRET'),
       });
     } catch {
+      this.logger.warn('Invalid or expired token during password reset');
       throw new UnauthorizedException('Password reset token is invalid or expired');
     }
 
     if (payload.purpose !== 'password-reset') {
+      this.logger.warn('Invalid token purpose during password reset');
       throw new UnauthorizedException('Password reset token is invalid');
     }
 
@@ -252,6 +276,7 @@ export class AuthService {
       });
 
       if (!credential || !this.tokenMatches(credential.password, payload.passwordVersion)) {
+        this.logger.warn(`Password reset token was already used or invalidated for user: ${payload.sub}`);
         throw new UnauthorizedException('Password reset token is invalid or has already been used');
       }
 
@@ -266,6 +291,7 @@ export class AuthService {
         { status: TokenStatus.REVOKED },
       );
     });
+    this.logger.log(`Password reset completed for user: ${payload.sub}`);
   }
 
   private extractDevice(userAgent?: string): string {

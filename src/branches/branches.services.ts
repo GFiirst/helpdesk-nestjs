@@ -1,4 +1,4 @@
-import { ConflictException, ForbiddenException, Injectable } from "@nestjs/common";
+import { ConflictException, ForbiddenException, Injectable, Logger } from "@nestjs/common";
 import { Branches } from "./branches.entity";
 import { DataSource, Not, Repository } from "typeorm";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -7,6 +7,8 @@ import { User } from "src/users/entity/user.entity";
 
 @Injectable()
 export class BranchesService {
+    private readonly logger = new Logger(BranchesService.name);
+
     constructor(
         @InjectRepository(Branches)
         private branchesRepository: Repository<Branches>,
@@ -16,6 +18,7 @@ export class BranchesService {
     ){}
 
     async createBranch(dto: createBranchDto, user: User){
+        this.logger.log('Branch creation started');
 
         const userWithBranches = await this.userRepository.findOne({
             where: { id: user.id },
@@ -25,6 +28,7 @@ export class BranchesService {
         const userPermission = (userWithBranches?.branches ?? []).map(branch => branch.name);
 
         if(!userPermission.includes(process.env.ADMIN_BRANCH!)){
+            this.logger.warn('Branch creation failed: User is not authorized');
             throw new ForbiddenException('You do not have permission to create a branch')
         }
         
@@ -35,12 +39,14 @@ export class BranchesService {
         )
 
         if(existingBranch){
+            this.logger.warn('Branch creation failed: Branch name already exists');
             throw new ConflictException('Branch with this name already exists')
         }
 
         const branch = new Branches();
         branch.name = dto.name;
         await this.branchesRepository.save(branch);
+        this.logger.log(`Branch creation succeeded. BranchId: ${branch.id}`);
 
         return branch;
     }
@@ -67,6 +73,7 @@ export class BranchesService {
         const userPermission = (userWithBranches?.branches ?? []).map(branch => branch.name);
 
         if(!userPermission.includes(process.env.ADMIN_BRANCH!)){
+            this.logger.warn('Branch listing failed: User is not authorized');
             throw new ForbiddenException('You do not have permission to view all branches')
         }
 
