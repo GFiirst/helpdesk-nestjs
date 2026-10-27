@@ -7,7 +7,6 @@ import { AuthModule } from './auth/auth.module';
 import { CaslModule } from './casl/casl.module';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from './users/users.module';
-import { AsyncLocalStorage } from 'async_hooks';
 import 'dotenv/config';
 import { entities } from './database/entities';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -18,7 +17,7 @@ import { HealthModule } from './health/health.module';
 import { AuditModule } from './audit/audit.module';
 import { UploadModule } from './upload/upload.module';
 import { SecurityModule } from './security/security.module';
-import { LoggingModule } from './logging/logging.module';
+import { LoggingModule } from './common/observability/logging.module';
 
 @Module({
   imports: [
@@ -73,10 +72,6 @@ import { LoggingModule } from './logging/logging.module';
     {
       provide: APP_GUARD,
       useClass: PoliciesGuard,
-    },
-    {
-      provide: AsyncLocalStorage,
-      useValue: new AsyncLocalStorage(),
     },
     {
       provide: APP_GUARD,
