@@ -1,4 +1,4 @@
-import { shutdownTelemetry } from './common/observability/instrumentation';
+import { shutdownTelemetry } from './logging/instrumentation';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
@@ -6,7 +6,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { Express } from 'express';
 import { AppModule } from './app.module';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { Logger } from 'nestjs-pino';
 
 async function bootstrap() {
