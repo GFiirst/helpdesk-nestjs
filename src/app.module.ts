@@ -17,7 +17,7 @@ import { HealthModule } from './health/health.module';
 import { AuditModule } from './audit/audit.module';
 import { UploadModule } from './upload/upload.module';
 import { SecurityModule } from './security/security.module';
-import { LoggingModule } from './logging/logging.module';
+import { LoggingModule } from './common/observability/logging.module';
 
 @Module({
   imports: [
