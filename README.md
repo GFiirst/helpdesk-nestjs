@@ -79,6 +79,13 @@ DB_USERNAME=postgres
 DB_PASSWORD=change-me
 DB_NAME=helpdesk
 DB_SYNC=false
+APPLY_MIGRATIONS_ON_STARTUP=true
+SEED_DATABASE_ON_STARTUP=true
+
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=replace-with-a-strong-admin-password
+ADMIN_NAME=Admin
+ADMIN_BRANCH=ALL
 
 JWT_SECRET=use-a-long-random-access-secret
 JWT_REFRESH_SECRET=use-a-different-long-random-refresh-secret
@@ -117,11 +124,6 @@ Do not rotate `FIELD_ENCRYPTION_KEY` or `FILE_ENCRYPTION_KEK` without migrating 
 ```bash
 npm ci
 npm run build
-npm run typeorm:run
-npm run generate:roles
-npm run generate:branches
-npm run permissions:sync
-npm run generate:users
 npm run start:dev
 ```
 
@@ -130,7 +132,7 @@ The API listens on `http://localhost:4321` by default.
 - Swagger UI: `/docs` in development
 - Health check: `/health`
 
-The seed scripts are intentionally separate so operators can control when startup data changes. Run branches and roles before the admin-user seed.
+When `APPLY_MIGRATIONS_ON_STARTUP=true`, committed migrations are applied while Nest initializes TypeORM. The application then runs the idempotent database seed before opening the HTTP port when `SEED_DATABASE_ON_STARTUP=true`. The seed creates the configured admin branch, missing roles, synchronizes permissions and role assignments, and creates the initial administrator when all `ADMIN_*` values are configured.
 
 ## Database migrations
 
@@ -186,7 +188,7 @@ curl -b cookies.txt -c cookies.txt -X POST \
 
 ## Roles and permissions
 
-The seed scripts create `admin`, `manager`, `agent`, and `user` roles. CASL policies are declared in `src/permissions/permissions.map.ts`. The `manage.manage` permission bypasses endpoint-specific checks.
+The startup seed creates `admin`, `manager`, `agent`, and `user` roles. CASL policies are declared in `src/permissions/permissions.map.ts`. The `manage.manage` permission bypasses endpoint-specific checks.
 
 All new endpoints are protected by default. Apply `@Public()` only when anonymous access is intentional, and use `@CheckPolicies(...)` for authorization rules.
 

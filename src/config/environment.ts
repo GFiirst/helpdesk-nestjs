@@ -39,6 +39,11 @@ export interface EnvironmentVariables {
   OTEL_EXPORTER_OTLP_PROTOCOL: 'grpc' | 'http/protobuf';
   OTEL_METRIC_EXPORT_INTERVAL_MS: number;
   APPLY_MIGRATIONS_ON_STARTUP: boolean;
+  SEED_DATABASE_ON_STARTUP: boolean;
+  ADMIN_EMAIL: string;
+  ADMIN_PASSWORD: string;
+  ADMIN_NAME: string;
+  ADMIN_BRANCH: string;
 }
 
 const requiredVariables = [
@@ -165,5 +170,10 @@ export function validateEnvironment(input: Record<string, unknown>): Environment
     OTEL_EXPORTER_OTLP_PROTOCOL: otlpProtocol,
     OTEL_METRIC_EXPORT_INTERVAL_MS: parsePositiveInteger(input.OTEL_METRIC_EXPORT_INTERVAL_MS, 10000, 'OTEL_METRIC_EXPORT_INTERVAL_MS'),
     APPLY_MIGRATIONS_ON_STARTUP: parseBoolean(input.APPLY_MIGRATIONS_ON_STARTUP, false),
+    SEED_DATABASE_ON_STARTUP: parseBoolean(input.SEED_DATABASE_ON_STARTUP, normalizedEnvironment !== 'test'),
+    ADMIN_EMAIL: parseString(input.ADMIN_EMAIL),
+    ADMIN_PASSWORD: parseString(input.ADMIN_PASSWORD),
+    ADMIN_NAME: parseString(input.ADMIN_NAME),
+    ADMIN_BRANCH: parseString(input.ADMIN_BRANCH),
   };
 }

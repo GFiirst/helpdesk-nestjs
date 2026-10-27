@@ -35,7 +35,17 @@ describe('validateEnvironment', () => {
       OTEL_SERVICE_VERSION: '0.0.1',
       OTEL_EXPORTER_OTLP_ENDPOINT: 'http://localhost:4317',
       OTEL_EXPORTER_OTLP_PROTOCOL: 'grpc',
+      SEED_DATABASE_ON_STARTUP: true,
     });
+  });
+
+  it('disables startup seeding by default in tests', () => {
+    const environment = validateEnvironment({
+      ...validEnvironment,
+      NODE_ENV: 'test',
+    });
+
+    expect(environment.SEED_DATABASE_ON_STARTUP).toBe(false);
   });
 
   it('rejects equal access and refresh secrets', () => {

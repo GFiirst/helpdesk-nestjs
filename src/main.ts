@@ -8,11 +8,13 @@ import { Express } from 'express';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { Logger } from 'nestjs-pino';
+import { DatabaseSeederService } from './database/database-seeder.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.useLogger(app.get(Logger));
   const configService = app.get(ConfigService);
+  await app.get(DatabaseSeederService).seed();
   app.enableCors({
     origin: configService
       .getOrThrow<string>('ORIGIN')

@@ -18,6 +18,7 @@ import { AuditModule } from './audit/audit.module';
 import { UploadModule } from './upload/upload.module';
 import { SecurityModule } from './security/security.module';
 import { LoggingModule } from './common/observability/logging.module';
+import { DatabaseSeederService } from './database/database-seeder.service';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { LoggingModule } from './common/observability/logging.module';
   ],
   controllers: [],
   providers: [
+    DatabaseSeederService,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
