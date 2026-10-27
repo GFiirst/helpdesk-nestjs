@@ -26,7 +26,7 @@ describe('validateEnvironment', () => {
       COOKIE_SECURE: false,
       JWT_ACCESS_EXPIRATION_MINUTES: 15,
       JWT_REFRESH_EXPIRATION_DAYS: 30,
-      LOG_LEVEL: 'debug',
+      LOG_LEVEL: 'info',
       LOG_PATH: 'logs',
       LOG_RETENTION_DAYS: 15,
       LOG_FILE_ENABLED: true,

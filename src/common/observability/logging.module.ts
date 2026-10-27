@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import { LoggerModule } from 'nestjs-pino';
 import { TransportMultiOptions } from 'pino';
 
+const nestFrameworkContexts = new Set(['InstanceLoader', 'NestApplication', 'NestFactory', 'RouterExplorer', 'RoutesResolver']);
+
 const redactedPaths = [
   'req.headers.authorization',
   'req.headers.cookie',
@@ -29,33 +31,49 @@ const redactedPaths = [
         const logPath = config.getOrThrow<string>('LOG_PATH');
         const retentionDays = config.getOrThrow<number>('LOG_RETENTION_DAYS');
         const fileLoggingEnabled = config.getOrThrow<boolean>('LOG_FILE_ENABLED');
+        const logLevel = config.getOrThrow<string>('LOG_LEVEL');
+        const formatterTarget = join(__dirname, 'serilog-log-formatter.transport.js');
         const targets: Array<TransportMultiOptions['targets'][number]> = [
           {
-            target: 'pino/file',
-            level: config.getOrThrow<string>('LOG_LEVEL'),
-            options: { destination: 1 },
+            level: logLevel,
+            pipeline: [{ target: formatterTarget }, { target: 'pino/file', options: { destination: 1 } }],
           },
         ];
 
         if (fileLoggingEnabled) {
           targets.push({
-            target: 'pino-roll',
-            level: config.getOrThrow<string>('LOG_LEVEL'),
-            options: {
-              file: join(logPath, 'application.log'),
-              frequency: 'daily',
-              dateFormat: 'yyyy-MM-dd',
-              mkdir: true,
-              limit: { count: Math.max(retentionDays - 1, 0) },
-            },
+            level: logLevel,
+            pipeline: [
+              { target: formatterTarget },
+              {
+                target: 'pino-roll',
+                options: {
+                  file: join(logPath, 'log.txt'),
+                  frequency: 'daily',
+                  dateFormat: 'yyyy-MM-dd',
+                  mkdir: true,
+                  limit: { count: Math.max(retentionDays - 1, 1) },
+                },
+              },
+            ],
           });
         }
 
         return {
           pinoHttp: {
-            level: config.getOrThrow<string>('LOG_LEVEL'),
+            base: undefined,
+            level: logLevel,
             transport: { targets },
             redact: { paths: redactedPaths, censor: '[REDACTED]' },
+            hooks: {
+              logMethod(args, method, level) {
+                const firstArgument = args[0];
+                const context =
+                  firstArgument && typeof firstArgument === 'object' && 'context' in firstArgument ? firstArgument.context : undefined;
+                if (level < 40 && typeof context === 'string' && nestFrameworkContexts.has(context)) return;
+                method.apply(this, args);
+              },
+            },
             genReqId: (request, response) => {
               const incomingRequestId = request.headers['x-request-id'];
               const requestId = typeof incomingRequestId === 'string' && incomingRequestId.length <= 128 ? incomingRequestId : randomUUID();
@@ -65,8 +83,10 @@ const redactedPaths = [
             autoLogging: {
               ignore: (request) => request.url === '/health',
             },
-            customSuccessMessage: (request, response) => `${request.method} ${request.url} completed with ${response.statusCode}`,
-            customErrorMessage: (request, response) => `${request.method} ${request.url} failed with ${response.statusCode}`,
+            customProps: () => ({ context: 'HTTP' }),
+            customSuccessMessage: (request, response, responseTime) =>
+              `HTTP "${request.method}" "${request.url}" responded ${response.statusCode} in ${responseTime.toFixed(4)} ms`,
+            customErrorMessage: (request, response) => `HTTP "${request.method}" "${request.url}" failed with ${response.statusCode}`,
           },
         };
       },

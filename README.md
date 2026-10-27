@@ -61,7 +61,7 @@ Important settings:
 NODE_ENV=development
 PORT=4321
 
-LOG_LEVEL=debug
+LOG_LEVEL=info
 LOG_PATH=logs
 LOG_RETENTION_DAYS=15
 LOG_FILE_ENABLED=true
@@ -198,7 +198,7 @@ Apply the migrations before enabling writes after upgrading to this version.
 
 ## Logs
 
-Pino replaces the default NestJS logger and writes structured JSON to stdout. When `LOG_FILE_ENABLED=true`, the same events are written under `LOG_PATH` with daily rotation and the configured retention period. HTTP requests receive an `x-request-id`; `/health` is excluded from automatic request logs to reduce noise.
+Pino replaces the default NestJS logger while using the same readable output convention as the base ASP.NET application: `[timestamp level] [trace/span] context message`. When `LOG_FILE_ENABLED=true`, events are written as text under `LOG_PATH` in daily `log.<date>.<number>.txt` files with the configured retention period. Informational NestJS bootstrap events are suppressed, exception stacks are written below their messages, HTTP requests receive an `x-request-id`, and `/health` is excluded from automatic request logs.
 
 Authorization headers, cookies, passwords, tokens, plaintext request emails, encrypted emails, and email hashes are redacted when those properties are present in a log record. Application code must still avoid logging whole DTOs or other personal data.
 
