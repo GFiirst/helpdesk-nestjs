@@ -27,7 +27,7 @@ docker compose exec api npm run generate:users
 - Set `COOKIE_SECURE=true` behind HTTPS.
 - Do not publish the database port unless external access is required.
 - Store `FILE_ENCRYPTION_KEK` in a secrets manager.
-- Mount uploads and PostgreSQL data on backed-up persistent storage.
+- Mount uploads, logs, and PostgreSQL data on backed-up persistent storage.
 - Terminate TLS and restrict trusted proxy traffic at the reverse proxy or load balancer.
 
 The image runs as the unprivileged `node` user. Ensure a bind-mounted upload directory is writable by UID 1000, or use the named volume included in the Compose file.
@@ -37,8 +37,9 @@ The image runs as the unprivileged `node` user. Ensure a bind-mounted upload dir
 ```bash
 docker compose ps
 docker compose logs --tail=200 api
+docker compose exec api ls -lah /app/logs
 docker compose restart api
 docker compose down
 ```
 
-`docker compose down -v` permanently removes database and upload volumes. Use it only for disposable environments.
+The API writes structured logs to stdout and rotating files in the `logs` volume. `docker compose down -v` permanently removes database, upload, and log volumes. Use it only for disposable environments.

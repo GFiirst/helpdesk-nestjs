@@ -17,6 +17,7 @@ import { HealthModule } from './health/health.module';
 import { AuditModule } from './audit/audit.module';
 import { UploadModule } from './upload/upload.module';
 import { SecurityModule } from './security/security.module';
+import { LoggingModule } from './logging/logging.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { SecurityModule } from './security/security.module';
       isGlobal: true,
       validate: validateEnvironment,
     }),
+    LoggingModule,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({

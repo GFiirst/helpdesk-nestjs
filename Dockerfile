@@ -14,7 +14,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
-RUN mkdir -p /app/uploads && chown node:node /app/uploads
+RUN mkdir -p /app/uploads /app/logs && chown node:node /app/uploads /app/logs
 USER node
 EXPOSE 4321
 CMD ["node", "dist/main.js"]

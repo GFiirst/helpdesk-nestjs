@@ -1,4 +1,4 @@
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -6,10 +6,11 @@ import cookieParser from 'cookie-parser';
 import { Express } from 'express';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { Logger } from 'nestjs-pino';
 
 async function bootstrap() {
-  const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  app.useLogger(app.get(Logger));
   const configService = app.get(ConfigService);
   app.enableCors({
     origin: configService
@@ -22,9 +23,7 @@ async function bootstrap() {
   if (configService.getOrThrow<string>('NODE_ENV') === 'development') {
     const config = new DocumentBuilder()
       .setTitle('Helpdesk API')
-      .setDescription(
-        'Authentication, users, branches, roles, and permissions API',
-      )
+      .setDescription('Authentication, users, branches, roles, and permissions API')
       .setVersion('1.0')
       .addCookieAuth('access_token', {
         type: 'apiKey',
@@ -52,7 +51,7 @@ async function bootstrap() {
 
   const port = configService.getOrThrow<number>('PORT');
   await app.listen(port);
-  logger.log(`Helpdesk API listening on port ${port}`);
+  app.get(Logger).log(`Helpdesk API listening on port ${port}`, 'Bootstrap');
 }
 
 void bootstrap();

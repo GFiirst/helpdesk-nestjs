@@ -17,6 +17,7 @@ Backend foundation for a helpdesk platform, built with NestJS 11, TypeORM, and P
 - AES-256-GCM envelope encryption for stored files.
 - File validation by size, extension, MIME type, and byte signature.
 - Global validation, error responses, rate limiting, CORS, Swagger, and database-aware health checks.
+- Structured Pino request and application logs with daily file rotation, retention, redaction, and request IDs.
 - Validated environment configuration and versioned TypeORM migrations.
 - Unit tests, Docker assets, CI workflow, OpenAPI contract, and DBML schema.
 
@@ -24,7 +25,7 @@ Backend foundation for a helpdesk platform, built with NestJS 11, TypeORM, and P
 
 - Node.js 22 and NestJS 11
 - TypeScript, TypeORM, and PostgreSQL
-- JWT, BCrypt, CASL, Nodemailer, and Node.js Crypto
+- JWT, BCrypt, CASL, Nodemailer, Pino, and Node.js Crypto
 - Jest, Supertest, Swagger/OpenAPI, Docker, and GitHub Actions
 
 ## Authentication model
@@ -58,6 +59,11 @@ Important settings:
 ```env
 NODE_ENV=development
 PORT=4321
+
+LOG_LEVEL=debug
+LOG_PATH=logs
+LOG_RETENTION_DAYS=15
+LOG_FILE_ENABLED=true
 
 DB_HOST=localhost
 DB_PORT=5432
@@ -181,6 +187,12 @@ All new endpoints are protected by default. Apply `@Public()` only when anonymou
 TypeORM inserts, updates, and deletes are written to `audit_log`. Passwords, tokens, secrets, authorization data, cookies, credentials, hashes, encrypted values, and keys are recursively redacted. Cyclic structures are handled safely. Request IP addresses are hashed before persistence.
 
 Apply the migrations before enabling writes after upgrading to this version.
+
+## Logs
+
+Pino replaces the default NestJS logger and writes structured JSON to stdout. When `LOG_FILE_ENABLED=true`, the same events are written under `LOG_PATH` with daily rotation and the configured retention period. HTTP requests receive an `x-request-id`; `/health` is excluded from automatic request logs to reduce noise.
+
+Authorization headers, cookies, passwords, tokens, plaintext request emails, encrypted emails, and email hashes are redacted when those properties are present in a log record. Application code must still avoid logging whole DTOs or other personal data.
 
 ## Sensitive database fields
 

@@ -28,6 +28,10 @@ export interface EnvironmentVariables {
   FILE_MAX_BYTES: number;
   FILE_ENCRYPTION_KEK: string;
   FIELD_ENCRYPTION_KEY: string;
+  LOG_LEVEL: string;
+  LOG_PATH: string;
+  LOG_RETENTION_DAYS: number;
+  LOG_FILE_ENABLED: boolean;
   APPLY_MIGRATIONS_ON_STARTUP: boolean;
 }
 
@@ -137,6 +141,10 @@ export function validateEnvironment(input: Record<string, unknown>): Environment
     FILE_MAX_BYTES: parsePositiveInteger(input.FILE_MAX_BYTES, 10 * 1024 * 1024, 'FILE_MAX_BYTES'),
     FILE_ENCRYPTION_KEK: parseString(input.FILE_ENCRYPTION_KEK),
     FIELD_ENCRYPTION_KEY: fieldEncryptionKey,
+    LOG_LEVEL: parseString(input.LOG_LEVEL, normalizedEnvironment === 'production' ? 'info' : 'debug'),
+    LOG_PATH: parseString(input.LOG_PATH, 'logs'),
+    LOG_RETENTION_DAYS: parsePositiveInteger(input.LOG_RETENTION_DAYS, 15, 'LOG_RETENTION_DAYS'),
+    LOG_FILE_ENABLED: parseBoolean(input.LOG_FILE_ENABLED, normalizedEnvironment !== 'test'),
     APPLY_MIGRATIONS_ON_STARTUP: parseBoolean(input.APPLY_MIGRATIONS_ON_STARTUP, false),
   };
 }
