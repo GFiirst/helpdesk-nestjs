@@ -9,6 +9,22 @@ Enum audit_action {
   delete
 }
 
+Enum ticket_status {
+  open
+  in_progress
+  pending
+  resolved
+  closed
+  cancelled
+}
+
+Enum ticket_priority {
+  low
+  medium
+  high
+  critical
+}
+
 Table credential {
   id uuid [pk]
   emailEncrypted varchar(512) [not null]
@@ -27,6 +43,7 @@ Table user {
   id uuid [pk]
   credentialId uuid [unique, ref: > credential.id]
   profileId uuid [unique, ref: > profile.id]
+  departmentId uuid [ref: > department.id]
   createdAt timestamptz [not null]
   updatedAt timestamptz [not null]
   deletedAt timestamptz
@@ -36,7 +53,6 @@ Table profile {
   id uuid [pk]
   name varchar [not null]
   phone varchar
-  department varchar
   remoteAccess varchar
   isAvailable boolean [not null, default: true]
   createdAt timestamptz [not null]
@@ -74,6 +90,15 @@ Table branches {
   name varchar(200) [not null, unique]
 }
 
+Table department {
+  id uuid [pk]
+  name varchar(120) [not null, unique]
+  description text
+  isActive boolean [not null, default: true]
+  createdAt timestamptz [not null]
+  updatedAt timestamptz [not null]
+}
+
 Table user_roles_roles {
   userId uuid [ref: > user.id]
   rolesId uuid [ref: > roles.id]
@@ -105,5 +130,138 @@ Table audit_log {
   indexes {
     (entityName, entityId)
     actorId
+  }
+}
+
+Table ticket_category {
+  id uuid [pk]
+  name varchar(120) [not null, unique]
+  description text
+  parentId uuid [ref: > ticket_category.id]
+  isActive boolean [not null, default: true]
+  createdAt timestamptz [not null]
+  updatedAt timestamptz [not null]
+}
+
+Table ticket {
+  id uuid [pk]
+  number bigint [not null, unique, increment]
+  title varchar(200) [not null]
+  description text [not null]
+
+  requesterId uuid [not null, ref: > user.id]
+  assignedToId uuid [ref: > user.id]
+  branchId uuid [not null, ref: > branches.id]
+  categoryId uuid [ref: > ticket_category.id]
+  slaPolicyId uuid [ref: > sla_policy.id]
+
+  status ticket_status [not null, default: 'open']
+  priority ticket_priority [not null, default: 'medium']
+
+  resolution text
+  createdAt timestamptz [not null]
+  updatedAt timestamptz [not null]
+  resolvedAt timestamptz
+  closedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    requesterId
+    assignedToId
+    branchId
+    categoryId
+    slaPolicyId
+    (status, priority, createdAt)
+  }
+}
+
+Table ticket_comment {
+  id uuid [pk]
+  ticketId uuid [not null, ref: > ticket.id]
+  authorId uuid [not null, ref: > user.id]
+  content text [not null]
+  isInternal boolean [not null, default: false]
+  createdAt timestamptz [not null]
+  updatedAt timestamptz [not null]
+  deletedAt timestamptz
+
+  indexes {
+    (ticketId, createdAt)
+  }
+}
+
+Table ticket_attachment {
+  id uuid [pk]
+  ticketId uuid [not null, ref: > ticket.id]
+  commentId uuid [ref: > ticket_comment.id]
+  uploadedById uuid [not null, ref: > user.id]
+  originalName varchar(255) [not null]
+  storageKey varchar(500) [not null]
+  mimeType varchar(150) [not null]
+  size bigint [not null]
+  createdAt timestamptz [not null]
+
+  indexes {
+    ticketId
+    commentId
+  }
+}
+
+Table ticket_history {
+  id uuid [pk]
+  ticketId uuid [not null, ref: > ticket.id]
+  actorId uuid [ref: > user.id]
+  eventType varchar(80) [not null]
+  oldValue jsonb
+  newValue jsonb
+  createdAt timestamptz [not null]
+
+  indexes {
+    (ticketId, createdAt)
+  }
+}
+
+Table ticket_assignment {
+  id uuid [pk]
+  ticketId uuid [not null, ref: > ticket.id]
+  assignedToId uuid [not null, ref: > user.id]
+  assignedById uuid [ref: > user.id]
+  assignedAt timestamptz [not null]
+  endedAt timestamptz
+  reason varchar(500)
+
+  indexes {
+    (ticketId, assignedAt)
+    assignedToId
+  }
+}
+
+Table sla_policy {
+  id uuid [pk]
+  name varchar(120) [not null]
+  priority ticket_priority [not null]
+  firstResponseMinutes int [not null]
+  resolutionMinutes int [not null]
+  businessHoursOnly boolean [not null, default: true]
+  isActive boolean [not null, default: true]
+  createdAt timestamptz [not null]
+  updatedAt timestamptz [not null]
+}
+
+Table support_team {
+  id uuid [pk]
+  name varchar(120) [not null, unique]
+  description text
+  isActive boolean [not null, default: true]
+  createdAt timestamptz [not null]
+  updatedAt timestamptz [not null]
+}
+
+Table support_team_member {
+  teamId uuid [not null, ref: > support_team.id]
+  userId uuid [not null, ref: > user.id]
+
+  indexes {
+    (teamId, userId) [pk]
   }
 }
